@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>אפליקציית עישון</title>
+  <style>
+    body { background:#0b1020; color:#eaf0ff; font-family:Arial, sans-serif; text-align:center; padding:20px; }
+    button, select { padding:12px 16px; margin:10px; border:none; border-radius:10px; font-size:16px; }
+    button { cursor:pointer; }
+    #btnStart { background:#6ea8fe; }
+    #btnSmoke { background:#70e1a1; }
+    .card { background:#121734; padding:16px; margin:12px auto; border-radius:16px; max-width:520px; box-shadow:0 6px 20px rgba(0,0,0,0.3);}
+    h1 { font-size:22px; margin-bottom:12px; }
+    .stat { font-size:18px; margin:6px 0; }
+    .row { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
+    label { font-size:14px; color:#9aa3b2; }
+  </style>
+</head>
+<body>
+
+  <h1>מעקב עישון</h1>
+
+  <div class="row">
+    <button id="btnStart">בצע</button>
+    <button id="btnSmoke">עישנתי</button>
+    <div>
+      <label for="divisorSel">לחלוק את הזמן עד 22:00 ל־</label>
+      <select id="divisorSel">
+        <option value="2">2 חלקים</option>
+        <option value="3" selected>3 חלקים</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stat">חלוקה נוכחית: <span id="currentDiv">3</span> חלקים</div>
+    <div class="stat">הפעם הבאה לעשן: <span id="nextSmoke">—</span></div>
+    <div class="stat">המרווח עד אז: <span id="interval">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="stat">כמה עישנתי היום: <span id="todayCount">0</span></div>
+    <div class="stat">ממוצע בין סיגריות: <span id="avgInterval">—</span></div>
+  </div>
+
+<script>
+const LS_KEY = "smokeAppState";
+const LS_DIV = "smokeAppDivisor";
+
+let state = {
+  firstPressTs: null,
+  presses: [],   // timestamps
+  todayCount: 0,
+  lastReset: null
+};
+
+// ---- Load / Save
+function loadState(){
+  const saved = localStorage.getItem(LS_KEY);
+  if(saved){ state = JSON.parse(saved); }
+  const savedDiv = localStorage.getItem(LS_DIV);
+  if(savedDiv) document.getElementById('divisorSel').value = savedDiv;
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+// ---- Daily reset at 03:00
+function checkDailyReset(){
+  const now = new Date();
+  const resetTime = new Date(now);
+  resetTime.setHours(3,0,0,0);
+  // אם לא היה reset היום, ועברנו את 03:00
+  if(!state.lastReset || (now.getTime() > resetTime.getTime() && state.lastReset < resetTime.getTime())){
+    state.todayCount = 0;
+    state.presses = [];
+    state.firstPressTs = null;
+    state.lastReset = now.getTime();
+    saveState();
+  }
+}
+
+// ---- Helpers
+function fmt(ms){
+  if(ms == null || ms < 0) return "—";
+  const totalMin = Math.floor(ms/60000);
+  const h = Math.floor(totalMin/60);
+  const m = totalMin%60;
+  return (h>0? h+"ש ":"") + m+"ד";
+}
+function getDivisor(){
+  const v = parseInt(document.getElementById('divisorSel').value,10);
+  return (v===2||v===3)? v : 3;
+}
+
+// ---- Next smoke calc (until 22:00, split by divisor)
+function calcNext(){
+  const now = new Date();
+  let end = new Date(now);
+  end.setHours(22,0,0,0); // 22:00 tonight
+  let diff = end - now;
+  if(diff <= 0){
+    document.getElementById("nextSmoke").textContent = "עבר 22:00";
+    document.getElementById("interval").textContent = "—";
+    return;
+  }
+  const div = getDivisor();
+  const part = diff / div;
+  const nextTime = new Date(now.getTime() + part);
+  document.getElementById("currentDiv").textContent = String(div);
+  document.getElementById("nextSmoke").textContent =
+    nextTime.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("interval").textContent = fmt(part);
+}
+
+// ---- Smoke button logic
+function pressSmoke(){
+  const now = Date.now();
+  if(!state.firstPressTs) state.firstPressTs = now;
+  state.presses.push(now);
+  state.todayCount++;
+  saveState();
+  updateUI();
+}
+
+// ---- Average calc (from first press, minus 8h per full 24h, divide by (presses-1))
+function calcAvg(){
+  if(state.presses.length < 2) return "—";
+  const now = Date.now();
+  let elapsed = now - state.firstPressTs;
+  const fullDays = Math.floor(elapsed / (24*60*60*1000));
+  elapsed -= fullDays * (8*60*60*1000);
+  const countForDiv = state.presses.length - 1; // first press not in denominator
+  const avg = elapsed / countForDiv;
+  return fmt(avg);
+}
+
+// ---- UI
+function updateUI(){
+  document.getElementById("todayCount").textContent = state.todayCount;
+  document.getElementById("avgInterval").textContent = calcAvg();
+  // לא מחשבים אוטומטית "בצע" אלא אם אתה רוצה שיתעדכן תמיד:
+  // calcNext();  // אם תרצה שיתעדכן תמיד, בטל הערה משורה זו.
+}
+
+// ---- Confirm wrapper for buttons
+function confirmAction(message){
+  return window.confirm(message || "לאשר פעולה?");
+}
+
+// ---- Events
+document.getElementById("btnStart").addEventListener("click", ()=>{
+  if(!confirmAction("לאשר חישוב חלוקה עד 22:00?")) return;
+  calcNext();
+});
+
+document.getElementById("btnSmoke").addEventListener("click", ()=>{
+  if(!confirmAction("לאשר 'עישנתי'?")) return;
+  pressSmoke();
+});
+
+document.getElementById("divisorSel").addEventListener("change", ()=>{
+  const div = getDivisor();
+  localStorage.setItem(LS_DIV, String(div));
+  document.getElementById("currentDiv").textContent = String(div);
+  // אם כבר לחצת "בצע" קודם, תרצה לעדכן מייד:
+  calcNext();
+});
+
+// ---- Init
+loadState();
+checkDailyReset();
+document.getElementById("currentDiv").textContent = String(getDivisor());
+updateUI();
+
+// ---- Auto refresh every 20s (avg & daily reset check)
+setInterval(()=>{
+  checkDailyReset();
+  updateUI();
+}, 20000);
+</script>
+</body>
+</html>
