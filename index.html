@@ -61,62 +61,81 @@
 /* ====== קבצי צליל ====== */
 const ALARM_FILES = ["alarm1.mp3","alarm2.mp3","alarm3.mp3"];
 
-/* ====== Keys & State ====== */
-const LS_STATE = "smokeAppState_v3";   // bump גרסה כדי לא לדרוס היסטוריה קודמת
+/* ====== Keys ====== */
+const LS_STATE = "smokeAppState_v4";   // גרסה חדשה – לא דורסת הישן
 const LS_PLAN  = "smokeAppPlan_v2";
 const LS_DIV   = "smokeAppDivisor_v2";
 
+/* ====== State ======
+  presses      – כל הטיימסטמפים מאז ומעולם (לממוצע אמיתי)
+  daily        – מודול “יום שמתחיל ב-03:00” עם אתחול אוטומטי
+  dailyMap     – ארכיון ספירות יומיות (אופציונלי לתצוגות עתידיות)
+*/
 let state = {
-  // שומר את כל ההיסטוריה מאז ומעולם
-  presses: [],        // מערך timestamps (ms)
-  firstPressTs: null  // נוחות: החותמת של הראשונה (אפשר להסיק גם מ-presses[0])
+  presses: [],
+  firstPressTs: null,
+  daily: {
+    lastPivot: null,     // ה-03:00 האחרון שהתחלנו ממנו את היום
+    todayCount: 0
+  },
+  dailyMap: {}           // { "2025-09-01": 7, ... } (מפתח לפי 03:00)
 };
 
+/* ====== Plan/Alarm (כמו אצלך) ====== */
 let plan = {
-  divisor: 2,         // 2 או 1
-  startedAt: null,    // מתי לחצו "בצע"
-  phase: 0,           // 0=אין, 1=חלק ראשון, 2=חלק שני עד 22:00, 3=עבר 22:00
-  phaseEndTs: null,   // סוף החלק הראשון (כש divisor=2)
-  finalEndTs: null,   // 22:00 היום
-  alarmFired: false,  // כבר הופעל צליל בסיום חלק ראשון
-  alarmActive: false, // האם צליל רץ כרגע בלופ ומחכה לאישור הפסקה
-  alarmSrc: null      // איזה קובץ הוגרל
+  divisor: 2,
+  startedAt: null,
+  phase: 0,          // 0=אין, 1=חצי ראשון, 2=חצי שני עד 22:00, 3=עבר 22:00
+  phaseEndTs: null,
+  finalEndTs: null,
+  alarmFired: false,
+  alarmActive: false,
+  alarmSrc: null
 };
 
 /* ====== Utils ====== */
 function saveState(){ localStorage.setItem(LS_STATE, JSON.stringify(state)); }
 function savePlan(){ localStorage.setItem(LS_PLAN, JSON.stringify(plan)); }
+
 function loadAll(){
-  // נסה v3
-  const s3 = localStorage.getItem(LS_STATE);
-  if(s3){ try{ state = JSON.parse(s3); }catch{} }
-  else {
-    // הגירת v2 אם יש (לא חובה)
-    const s2 = localStorage.getItem("smokeAppState_v2");
-    if(s2){
+  // נסיון טעינה של v4
+  const s = localStorage.getItem(LS_STATE);
+  if(s){ try{ state = JSON.parse(s); }catch{} }
+
+  // מיגרציה קלה אם יש v3 (לא חובה)
+  if(!state.presses?.length){
+    const s3 = localStorage.getItem("smokeAppState_v3");
+    if(s3){
       try{
-        const old = JSON.parse(s2);
+        const old = JSON.parse(s3);
         state.presses = Array.isArray(old.presses) ? old.presses : [];
         state.firstPressTs = old.firstPressTs || (state.presses[0] ?? null);
-        saveState();
       }catch{}
     }
   }
+
+  // ודא מבנה daily
+  if(!state.daily) state.daily = { lastPivot: null, todayCount: 0 };
+  if(!state.dailyMap) state.dailyMap = {};
+
   const p = localStorage.getItem(LS_PLAN);
   if(p){ try{ plan = JSON.parse(p); }catch{} }
+
   const savedDiv = localStorage.getItem(LS_DIV);
   if(savedDiv){ document.getElementById('divisorSel').value = savedDiv; }
-}
-function confirmAction(msg){ return window.confirm(msg||"לאשר?"); }
 
+  // חישוב/אתחול ספירת היום לפי 03:00
+  ensurePivotAndRecount();
+}
+
+function z2(n){ return String(n).padStart(2,"0"); }
 function fmtHMS(ms){
   if(ms==null || ms<=0) return "00:00:00";
   const s = Math.floor(ms/1000);
   const hh = Math.floor(s/3600);
   const mm = Math.floor((s%3600)/60);
   const ss = s%60;
-  const z = n => n.toString().padStart(2,'0');
-  return `${z(hh)}:${z(mm)}:${z(ss)}`;
+  return `${z2(hh)}:${z2(mm)}:${z2(ss)}`;
 }
 function fmtHM(ms){
   if(ms==null || ms<0) return "—";
@@ -126,28 +145,68 @@ function fmtHM(ms){
   return (h>0? h+"ש ":"") + m+"ד";
 }
 
-/* ====== “יום” שמתחיל ב-03:00 ====== */
-function startOfToday3(){
-  const now = new Date();
-  const t = new Date(now);
-  t.setHours(3,0,0,0);
-  // אם עדיין לא הגענו ל-03:00 של היום – שייך ליום הקודם
-  if(now.getTime() < t.getTime()){
-    t.setDate(t.getDate()-1);
-  }
-  return t.getTime();
+/* ====== יום שמתחיל ב-03:00 ====== */
+// ציר מפתח יומי: YYYY-MM-DD לפי התאריך של 03:00
+function pivotForTs(ts){
+  const d = new Date(ts);
+  const p = new Date(d);
+  p.setHours(3,0,0,0);
+  if(d.getTime() < p.getTime()) p.setDate(p.getDate()-1);
+  return p.getTime();
+}
+function currentPivot(){ return pivotForTs(Date.now()); }
+function dayKeyFromPivot(pivotTs){
+  const d = new Date(pivotTs);
+  const yyyy = d.getFullYear();
+  const mm = z2(d.getMonth()+1);
+  const dd = z2(d.getDate());
+  return `${yyyy}-${mm}-${dd}`;
 }
 
-/* ====== Average Calc ====== */
-/*
-  ממוצע מרווחים “פחות 8 שעות ופחות הראשונה”:
-  - אם יש פחות 2 לחיצות → “—”
-  - elapsed = (ts_last - ts_first)
-  - fullDays = floor(elapsed / 24h)
-  - elapsed -= fullDays * 8h
-  - denom = (N - 1)
-  - avg = elapsed / denom
-*/
+// אתחול/החלפת יום: אם עברנו את 03:00 – מאפס todayCount ושומר את של אתמול בארכיון
+function ensurePivotAndRecount(){
+  const nowPivot = currentPivot();
+  const prevPivot = state.daily.lastPivot;
+
+  // אם אין pivot – זה ריצה ראשונה: קבע pivot והסק todayCount מהיסטוריה
+  if(prevPivot == null){
+    state.daily.lastPivot = nowPivot;
+    state.daily.todayCount = state.presses.filter(ts => ts >= nowPivot).length;
+    saveState();
+    return;
+  }
+
+  // אם עברנו pivot אחד או יותר (למשל האפליקציה הייתה סגורה) – ארכוב ואיפוס
+  if(nowPivot !== prevPivot){
+    // ארכוב היום הקודם (במפתח שלו)
+    const prevKey = dayKeyFromPivot(prevPivot);
+    const prevCount = state.presses.filter(ts => ts >= prevPivot && ts < nowPivot).length;
+    state.dailyMap[prevKey] = prevCount;
+
+    // אתחול היום החדש
+    state.daily.lastPivot = nowPivot;
+    state.daily.todayCount = state.presses.filter(ts => ts >= nowPivot).length;
+    saveState();
+  }else{
+    // אותו יום – ודא שהמונה מסונכרן עם ההיסטוריה (למקרה עריכות חיצוניות)
+    const todayCount = state.presses.filter(ts => ts >= nowPivot).length;
+    if(todayCount !== state.daily.todayCount){
+      state.daily.todayCount = todayCount;
+      saveState();
+    }
+  }
+}
+
+// קריאה תדירה לבדוק אם עברנו את 03:00 “בלייב”
+function checkRollover(){
+  const nowP = currentPivot();
+  if(nowP !== state.daily.lastPivot){
+    ensurePivotAndRecount(); // יבצע ארכוב+איפוס אוטומטי
+    updateStatsUI();
+  }
+}
+
+/* ====== ממוצע אמיתי (פחות 8 שעות לכל 24ש' מלאות, פחות הראשונה) ====== */
 function calcAvg(){
   const N = state.presses.length;
   if(N < 2) return "—";
@@ -159,24 +218,15 @@ function calcAvg(){
   const SLEEP = 8*60*60*1000;
   const fullDays = Math.floor(elapsed / DAY);
   elapsed -= fullDays * SLEEP;
-  const denom = N - 1;              // “פחות הסיגריה הראשונה”
+  const denom = N - 1;
   const avg = elapsed / denom;
   return fmtHM(avg);
 }
 
-/* ====== Today count (03:00→עכשיו) ====== */
-function countToday(){
-  const sod3 = startOfToday3();
-  // לא מוחקים היסטוריה — רק מסננים לפי יום נוכחי
-  return state.presses.filter(ts => ts >= sod3).length;
-}
-
-/* ====== Notification helper ====== */
+/* ====== התראות ====== */
 function requestNotif(){
-  if("Notification" in window){
-    if(Notification.permission === "default"){
-      Notification.requestPermission();
-    }
+  if("Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission();
   }
 }
 function notify(title, body){
@@ -185,7 +235,7 @@ function notify(title, body){
   }
 }
 
-/* ====== Audio handling ====== */
+/* ====== אודיו ====== */
 const alarmEl = document.getElementById('alarm');
 let audioPrimed = false;
 
@@ -193,57 +243,43 @@ function chooseRandomAlarm(){
   const i = Math.floor(Math.random()*ALARM_FILES.length);
   return ALARM_FILES[i];
 }
-
-// לפתוח הרשאות/פריים אודיו בלחיצה
 function primeAudio(){
   if(audioPrimed) return;
   try{
     alarmEl.muted = true;
     alarmEl.loop = false;
-    alarmEl.src = chooseRandomAlarm(); // טעינה ראשונית שקטה
+    alarmEl.src = chooseRandomAlarm();
     alarmEl.play().then(()=>{
-      alarmEl.pause();
-      alarmEl.currentTime = 0;
-      alarmEl.muted = false;
-      audioPrimed = true;
-    }).catch(()=>{ /* יתכן חסימה, ננסה שוב בלחיצה אחרת */ });
+      alarmEl.pause(); alarmEl.currentTime = 0; alarmEl.muted = false; audioPrimed = true;
+    }).catch(()=>{});
   }catch{}
 }
-
 function startAlarmLoop(){
-  // בחר קובץ אקראי לכל אזעקה
   const src = chooseRandomAlarm();
   plan.alarmSrc = src;
   alarmEl.src = src;
   alarmEl.loop = true;
   alarmEl.currentTime = 0;
-
   alarmEl.play().then(()=>{
-    plan.alarmActive = true;
+    plan.alarmActive = true; savePlan();
     document.getElementById('btnStopAlarm').style.display = 'inline-block';
-    savePlan();
   }).catch(()=>{
-    const hint = document.getElementById('phaseHint');
-    hint.innerHTML = '⛔ הדפדפן חסם אודיו אוטומטי. גע במסך או לחץ "בדיקת צליל" כדי לאפשר.';
+    document.getElementById('phaseHint').innerHTML =
+      '⛔ הדפדפן חסם אודיו אוטומטי. גע במסך או לחץ "בדיקת צליל".';
   });
-
-  notify("הגיעה תחנת עישון", "לחץ כדי לעצור את האזעקה ולהמשיך לחלק השני (עד 22:00).");
+  notify("הגיעה תחנת עישון","לחץ כדי לעצור את האזעקה.");
 }
-
 function stopAlarmLoop(){
-  alarmEl.pause();
-  alarmEl.currentTime = 0;
-  plan.alarmActive = false;
+  alarmEl.pause(); alarmEl.currentTime = 0;
+  plan.alarmActive = false; savePlan();
   document.getElementById('btnStopAlarm').style.display = 'none';
-  savePlan();
 }
 
-/* ====== Plan (בצע) ====== */
+/* ====== תכנית (בצע) ====== */
 function getDivisor(){
   const v = parseInt(document.getElementById('divisorSel').value,10);
   return (v===1 || v===2) ? v : 2;
 }
-
 function buildPlan(){
   const div = getDivisor();
   const now = new Date();
@@ -259,60 +295,50 @@ function buildPlan(){
   plan.alarmSrc = null;
 
   if(diff <= 0){
-    plan.phase = 3;
-    plan.phaseEndTs = null;
+    plan.phase = 3; plan.phaseEndTs = null;
   }else if(div === 2){
-    plan.phase = 1;
-    plan.phaseEndTs = now.getTime() + diff/2; // סוף החלק הראשון
-  }else{ // 1
-    plan.phase = 2; // ישר עד 22:00
-    plan.phaseEndTs = null;
+    plan.phase = 1; plan.phaseEndTs = now.getTime() + diff/2;
+  }else{
+    plan.phase = 2; plan.phaseEndTs = null;
   }
   savePlan();
 }
 
-/* ====== Buttons ====== */
+/* ====== כפתורים ====== */
 function onStart(){
-  if(!confirmAction("לאשר חישוב לוח זמנים עד 22:00?")) return;
-  primeAudio();
-  requestNotif();
-  buildPlan();
-  updatePlanUI();
+  if(!confirm("לאשר חישוב לוח זמנים עד 22:00?")) return;
+  primeAudio(); requestNotif();
+  buildPlan(); updatePlanUI();
 }
-
 function onSmoke(){
-  if(!confirmAction("לאשר 'עישנתי'?")) return;
+  if(!confirm("לאשר 'עישנתי'?")) return;
   const now = Date.now();
-  state.presses.push(now);                 // מוסיפים להיסטוריה (לא מוחקים לעולם)
-  if(!state.firstPressTs) state.firstPressTs = now; // נשמרת ראשונה לנוחות
+  // 1) היסטוריה מלאה (לממוצע)
+  state.presses.push(now);
+  if(!state.firstPressTs) state.firstPressTs = now;
+
+  // 2) ספירת-יום שמתחילה ב-03:00, עם אתחול אוטומטי אם צריך
+  ensurePivotAndRecount(); // אם עברנו 03:00 – יאתחל ויארכב
+  const pivot = state.daily.lastPivot; // עדכני לאחר ensure
+  if(now >= pivot){ state.daily.todayCount += 1; }
+
   saveState();
   updateStatsUI();
 }
-
 function onTest(){
-  // מנגן אקראי ~3 שניות ואז עוצר
-  primeAudio();
-  requestNotif();
+  primeAudio(); requestNotif();
   const src = chooseRandomAlarm();
-  alarmEl.src = src;
-  alarmEl.loop = false;
-  alarmEl.currentTime = 0;
+  alarmEl.src = src; alarmEl.loop = false; alarmEl.currentTime = 0;
   alarmEl.play().then(()=>{
-    setTimeout(()=>{
-      alarmEl.pause();
-      alarmEl.currentTime = 0;
-    }, 3000);
-  }).catch(()=>{
-    alert("נראה שהדפדפן חסם ניגון אוטומטי. נסה שוב אחרי שלחצת על המסך.");
-  });
+    setTimeout(()=>{ alarmEl.pause(); alarmEl.currentTime = 0; }, 3000);
+  }).catch(()=>{ alert("נראה שהדפדפן חסם ניגון אוטומטי. נסה שוב אחרי נגיעה במסך."); });
 }
-
 function onStopAlarm(){
-  if(!confirmAction("להפסיק את הצליל?")) return;
+  if(!confirm("להפסיק את הצליל?")) return;
   stopAlarmLoop();
 }
 
-/* ====== UI Update ====== */
+/* ====== UI ====== */
 function updatePlanUI(){
   const div = plan.divisor || getDivisor();
   document.getElementById('currentDiv').textContent = String(div);
@@ -322,26 +348,22 @@ function updatePlanUI(){
   const nextTimeEl  = document.getElementById('nextTime');
   const hintEl      = document.getElementById('phaseHint');
 
-  // אם דף נטען מחדש באמצע אזעקה—נחזיר אותה
+  // החזרת אזעקה אחרי ריענון
   if(plan.alarmActive){
     document.getElementById('btnStopAlarm').style.display = 'inline-block';
     if(alarmEl.paused && plan.alarmSrc){
-      alarmEl.src = plan.alarmSrc;
-      alarmEl.loop = true;
-      alarmEl.currentTime = 0;
-      alarmEl.play().catch(()=>{ /* ייתכן שנחסם עד מגע */ });
+      alarmEl.src = plan.alarmSrc; alarmEl.loop = true; alarmEl.currentTime = 0;
+      alarmEl.play().catch(()=>{});
     }
   }
 
-  // עבר 22:00?
+  // בדיקת 22:00
   if(plan.finalEndTs && now >= plan.finalEndTs){
-    plan.phase = 3;
-    savePlan();
+    plan.phase = 3; savePlan();
   }
 
   if(plan.phase === 0){
-    nextTimeEl.textContent = "—";
-    countdownEl.textContent = "—";
+    nextTimeEl.textContent = "—"; countdownEl.textContent = "—";
     hintEl.textContent = "אין תוכנית פעילה. לחץ 'בצע'.";
     return;
   }
@@ -352,13 +374,8 @@ function updatePlanUI(){
     nextTimeEl.textContent = new Date(plan.phaseEndTs).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"});
     hintEl.textContent = "חלק ראשון";
     if(left === 0){
-      if(!plan.alarmFired){
-        plan.alarmFired = true;
-        savePlan();
-        startAlarmLoop();
-      }
-      plan.phase = 2;
-      savePlan();
+      if(!plan.alarmFired){ plan.alarmFired = true; savePlan(); startAlarmLoop(); }
+      plan.phase = 2; savePlan();
     }
   }else if(plan.phase === 2){
     const left = Math.max(0, (plan.finalEndTs||0) - now);
@@ -366,11 +383,10 @@ function updatePlanUI(){
     nextTimeEl.textContent = new Date(plan.finalEndTs).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"});
     hintEl.textContent = "חלק שני (עד 22:00)";
     if(left === 0){
-      plan.phase = 3;
-      savePlan();
+      plan.phase = 3; savePlan();
       if(plan.alarmActive) stopAlarmLoop();
     }
-  }else if(plan.phase === 3){
+  }else{
     nextTimeEl.textContent = "22:00";
     countdownEl.textContent = "00:00:00";
     hintEl.innerHTML = '<span class="warn">עבר 22:00 להיום</span>';
@@ -378,7 +394,8 @@ function updatePlanUI(){
 }
 
 function updateStatsUI(){
-  document.getElementById('todayCount').textContent = countToday();
+  // תמיד מאחורי הקלעים – todayCount מאופס ב-03:00 אוטומטית
+  document.getElementById('todayCount').textContent = state.daily.todayCount;
   document.getElementById('avgInterval').textContent = calcAvg();
 }
 
@@ -386,11 +403,14 @@ function updateStatsUI(){
 let tickSec = 0;
 function tick(){
   updatePlanUI();
+  // בודק התחלפות יום (03:00) ברקע
+  checkRollover();
+
   tickSec = (tickSec+1)%20;
   if(tickSec===0) updateStatsUI();
 }
 
-/* ====== Init ====== */
+/* ====== Init & Listeners ====== */
 document.getElementById('btnStart').addEventListener('click', onStart);
 document.getElementById('btnSmoke').addEventListener('click', onSmoke);
 document.getElementById('btnTest').addEventListener('click', onTest);
@@ -401,10 +421,8 @@ document.getElementById('divisorSel').addEventListener('change', ()=>{
   localStorage.setItem(LS_DIV, String(div));
   document.getElementById('currentDiv').textContent = String(div);
   if(plan.phase!==0){
-    if(!confirmAction("לעדכן את התוכנית לפי החלוקה החדשה?")) return;
-    primeAudio();
-    buildPlan();
-    updatePlanUI();
+    if(!confirm("לעדכן את התוכנית לפי החלוקה החדשה?")) return;
+    primeAudio(); buildPlan(); updatePlanUI();
   }
 });
 
@@ -413,7 +431,7 @@ document.getElementById('currentDiv').textContent = String(getDivisor());
 updateStatsUI();
 updatePlanUI();
 
-// רענון כל שנייה לספירה לאחור
+// טיק כל שנייה לספירה לאחור + בדיקת 03:00
 setInterval(tick, 1000);
 </script>
 </body>
