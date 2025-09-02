@@ -53,7 +53,6 @@
     <div class="hint">הממוצע: מהלחיצה הראשונה, פחות 8 שעות לכל 24 שעות מלאות, לחלק במס’ הלחיצות פחות אחת.</div>
   </div>
 
-  <!-- אלמנט אודיו (מקור נקבע דינמית) -->
   <audio id="alarm" preload="auto"></audio>
 </div>
 
@@ -62,26 +61,19 @@
 const ALARM_FILES = ["alarm1.mp3","alarm2.mp3","alarm3.mp3"];
 
 /* ====== Keys ====== */
-const LS_STATE = "smokeAppState_v4";   // גרסה חדשה – לא דורסת הישן
+const LS_STATE = "smokeAppState_v4";
 const LS_PLAN  = "smokeAppPlan_v2";
 const LS_DIV   = "smokeAppDivisor_v2";
 
-/* ====== State ======
-  presses      – כל הטיימסטמפים מאז ומעולם (לממוצע אמיתי)
-  daily        – מודול “יום שמתחיל ב-03:00” עם אתחול אוטומטי
-  dailyMap     – ארכיון ספירות יומיות (אופציונלי לתצוגות עתידיות)
-*/
+/* ====== State ====== */
 let state = {
   presses: [],
   firstPressTs: null,
-  daily: {
-    lastPivot: null,     // ה-03:00 האחרון שהתחלנו ממנו את היום
-    todayCount: 0
-  },
-  dailyMap: {}           // { "2025-09-01": 7, ... } (מפתח לפי 03:00)
+  daily: { lastPivot: null, todayCount: 0 },
+  dailyMap: {}
 };
 
-/* ====== Plan/Alarm (כמו אצלך) ====== */
+/* ====== Plan ====== */
 let plan = {
   divisor: 2,
   startedAt: null,
@@ -98,11 +90,9 @@ function saveState(){ localStorage.setItem(LS_STATE, JSON.stringify(state)); }
 function savePlan(){ localStorage.setItem(LS_PLAN, JSON.stringify(plan)); }
 
 function loadAll(){
-  // נסיון טעינה של v4
   const s = localStorage.getItem(LS_STATE);
   if(s){ try{ state = JSON.parse(s); }catch{} }
 
-  // מיגרציה קלה אם יש v3 (לא חובה)
   if(!state.presses?.length){
     const s3 = localStorage.getItem("smokeAppState_v3");
     if(s3){
@@ -113,8 +103,6 @@ function loadAll(){
       }catch{}
     }
   }
-
-  // ודא מבנה daily
   if(!state.daily) state.daily = { lastPivot: null, todayCount: 0 };
   if(!state.dailyMap) state.dailyMap = {};
 
@@ -124,7 +112,6 @@ function loadAll(){
   const savedDiv = localStorage.getItem(LS_DIV);
   if(savedDiv){ document.getElementById('divisorSel').value = savedDiv; }
 
-  // חישוב/אתחול ספירת היום לפי 03:00
   ensurePivotAndRecount();
 }
 
@@ -146,7 +133,6 @@ function fmtHM(ms){
 }
 
 /* ====== יום שמתחיל ב-03:00 ====== */
-// ציר מפתח יומי: YYYY-MM-DD לפי התאריך של 03:00
 function pivotForTs(ts){
   const d = new Date(ts);
   const p = new Date(d);
@@ -163,12 +149,11 @@ function dayKeyFromPivot(pivotTs){
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// אתחול/החלפת יום: אם עברנו את 03:00 – מאפס todayCount ושומר את של אתמול בארכיון
+// מחשב את ספירת היום *אך ורק* מתוך ההיסטוריה (בלי הוספה ידנית) – FIX
 function ensurePivotAndRecount(){
   const nowPivot = currentPivot();
   const prevPivot = state.daily.lastPivot;
 
-  // אם אין pivot – זה ריצה ראשונה: קבע pivot והסק todayCount מהיסטוריה
   if(prevPivot == null){
     state.daily.lastPivot = nowPivot;
     state.daily.todayCount = state.presses.filter(ts => ts >= nowPivot).length;
@@ -176,19 +161,15 @@ function ensurePivotAndRecount(){
     return;
   }
 
-  // אם עברנו pivot אחד או יותר (למשל האפליקציה הייתה סגורה) – ארכוב ואיפוס
   if(nowPivot !== prevPivot){
-    // ארכוב היום הקודם (במפתח שלו)
     const prevKey = dayKeyFromPivot(prevPivot);
     const prevCount = state.presses.filter(ts => ts >= prevPivot && ts < nowPivot).length;
     state.dailyMap[prevKey] = prevCount;
 
-    // אתחול היום החדש
     state.daily.lastPivot = nowPivot;
     state.daily.todayCount = state.presses.filter(ts => ts >= nowPivot).length;
     saveState();
   }else{
-    // אותו יום – ודא שהמונה מסונכרן עם ההיסטוריה (למקרה עריכות חיצוניות)
     const todayCount = state.presses.filter(ts => ts >= nowPivot).length;
     if(todayCount !== state.daily.todayCount){
       state.daily.todayCount = todayCount;
@@ -197,16 +178,15 @@ function ensurePivotAndRecount(){
   }
 }
 
-// קריאה תדירה לבדוק אם עברנו את 03:00 “בלייב”
 function checkRollover(){
   const nowP = currentPivot();
   if(nowP !== state.daily.lastPivot){
-    ensurePivotAndRecount(); // יבצע ארכוב+איפוס אוטומטי
+    ensurePivotAndRecount();
     updateStatsUI();
   }
 }
 
-/* ====== ממוצע אמיתי (פחות 8 שעות לכל 24ש' מלאות, פחות הראשונה) ====== */
+/* ====== ממוצע אמיתי ====== */
 function calcAvg(){
   const N = state.presses.length;
   if(N < 2) return "—";
@@ -305,26 +285,32 @@ function buildPlan(){
 }
 
 /* ====== כפתורים ====== */
+let smokeDisabledUntil = 0; // אנטי דאבל-קליק – FIX
+
 function onStart(){
   if(!confirm("לאשר חישוב לוח זמנים עד 22:00?")) return;
   primeAudio(); requestNotif();
   buildPlan(); updatePlanUI();
 }
+
 function onSmoke(){
-  if(!confirm("לאשר 'עישנתי'?")) return;
   const now = Date.now();
+  if(now < smokeDisabledUntil){ return; }           // חוסם דאבל-טאץ'
+  smokeDisabledUntil = now + 1500;                  // 1.5 שניות – FIX
+
+  if(!confirm("לאשר 'עישנתי'?")) return;
+
   // 1) היסטוריה מלאה (לממוצע)
   state.presses.push(now);
   if(!state.firstPressTs) state.firstPressTs = now;
 
-  // 2) ספירת-יום שמתחילה ב-03:00, עם אתחול אוטומטי אם צריך
-  ensurePivotAndRecount(); // אם עברנו 03:00 – יאתחל ויארכב
-  const pivot = state.daily.lastPivot; // עדכני לאחר ensure
-  if(now >= pivot){ state.daily.todayCount += 1; }
+  // 2) ספירת יום מחושבת *רק* מההיסטוריה – בלי todayCount += 1 – FIX
+  ensurePivotAndRecount();
 
   saveState();
   updateStatsUI();
 }
+
 function onTest(){
   primeAudio(); requestNotif();
   const src = chooseRandomAlarm();
@@ -348,7 +334,6 @@ function updatePlanUI(){
   const nextTimeEl  = document.getElementById('nextTime');
   const hintEl      = document.getElementById('phaseHint');
 
-  // החזרת אזעקה אחרי ריענון
   if(plan.alarmActive){
     document.getElementById('btnStopAlarm').style.display = 'inline-block';
     if(alarmEl.paused && plan.alarmSrc){
@@ -357,7 +342,6 @@ function updatePlanUI(){
     }
   }
 
-  // בדיקת 22:00
   if(plan.finalEndTs && now >= plan.finalEndTs){
     plan.phase = 3; savePlan();
   }
@@ -394,7 +378,6 @@ function updatePlanUI(){
 }
 
 function updateStatsUI(){
-  // תמיד מאחורי הקלעים – todayCount מאופס ב-03:00 אוטומטית
   document.getElementById('todayCount').textContent = state.daily.todayCount;
   document.getElementById('avgInterval').textContent = calcAvg();
 }
@@ -403,9 +386,7 @@ function updateStatsUI(){
 let tickSec = 0;
 function tick(){
   updatePlanUI();
-  // בודק התחלפות יום (03:00) ברקע
   checkRollover();
-
   tickSec = (tickSec+1)%20;
   if(tickSec===0) updateStatsUI();
 }
@@ -430,8 +411,6 @@ loadAll();
 document.getElementById('currentDiv').textContent = String(getDivisor());
 updateStatsUI();
 updatePlanUI();
-
-// טיק כל שנייה לספירה לאחור + בדיקת 03:00
 setInterval(tick, 1000);
 </script>
 </body>
