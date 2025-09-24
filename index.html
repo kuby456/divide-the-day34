@@ -5,32 +5,176 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>הגרלת משימה יומית</title>
   <style>
-    body {
-      font-family: "Heebo", system-ui, Arial;
-      background:#f6f7fb;
-      margin:0; padding:20px;
-      display:grid; place-items:center;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+
+  body {
+    font-family: "Heebo", system-ui, Arial, sans-serif;
+    background: linear-gradient(135deg, #e0eaff 0%, #f6f7fb 100%);
+    margin: 0;
+    padding: 32px;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    animation: bgFade 5s linear infinite alternate;
+  }
+
+  @keyframes bgFade {
+    0% { background-position: left; }
+    100% { background-position: right; }
+  }
+
+  .card {
+    background: linear-gradient(110deg, #ffffff 70%, #e4e6f7 100%);
+    padding: 32px 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(106, 90, 249, 0.15), 0 2px 6px rgba(0,0,0,.06);
+    max-width: 500px;
+    width: 100%;
+    transition: box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, #6a5af920 60%, transparent 100%);
+    z-index: 0;
+  }
+
+  h1 {
+    margin: 0 0 18px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #6a5af9;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px rgba(106, 90, 249, 0.07);
+  }
+
+  button {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #6a5af9 60%, #7f6dfc 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    margin: 7px 5px 0 0;
+    box-shadow: 0 2px 8px rgba(106, 90, 249, 0.08);
+    transition: background 0.2s, transform 0.13s;
+    outline: none;
+  }
+
+  button:hover, button:focus {
+    background: linear-gradient(90deg, #7f6dfc 60%, #6a5af9 100%);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .result, .stats {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid #dedcfb;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #fafafa 80%, #f4f5fe 100%);
+    font-size: 1rem;
+    color: #4d4d66;
+    box-shadow: 0 1px 5px rgba(106, 90, 249, 0.05);
+    position: relative;
+    z-index: 1;
+    transition: box-shadow 0.2s;
+  }
+
+  .result {
+    border-left: 4px solid #6a5af9;
+    font-weight: 500;
+  }
+
+  .stats {
+    border-left: 4px solid #fdc46a;
+    background: linear-gradient(90deg, #faf7f4 80%, #fdf6ee 100%);
+  }
+
+  .stat-item {
+    margin: 6px 0;
+    padding-left: 8px;
+    font-size: 0.98rem;
+    position: relative;
+  }
+  .stat-item::before {
+    content: "•";
+    color: #fdc46a;
+    font-size: 1.1rem;
+    position: absolute;
+    left: -12px;
+    top: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
     .card {
-      background:#fff; padding:20px; border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,.1);
-      max-width:600px; width:100%;
+      padding: 20px 8px;
+      max-width: 98vw;
+      border-radius: 10px;
     }
-    h1 { margin:0 0 12px; }
-    button {
-      padding:10px 16px; border:0; border-radius:10px;
-      background:#6a5af9; color:#fff; font-weight:600;
-      cursor:pointer; margin:5px;
+    h1 {
+      font-size: 1.4rem;
     }
-    .result, .stats { margin-top:15px; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fafafa; }
-    .stat-item { margin:4px 0; }
-  </style>
+  }
+  .stats {
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  padding: 28px 22px;
+  max-width: 340px;
+  margin: 24px auto;
+  direction: rtl;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.stats h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.35rem;
+  color: #284266;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.stat-item {
+  font-size: 1.05rem;
+  color: #333;
+  margin: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-item span {
+  font-weight: bold;
+  color: #2e8b57;
+  background: #eafbe7;
+  border-radius: 6px;
+  padding: 2px 10px;
+  min-width: 32px;
+  text-align: center;
+  margin-right: 10px;
+}
+</style>
 </head>
 <body>
   <div class="card">
     <h1>הגרלת משימה</h1>
     <button id="drawBtn">הגרל משימה</button>
-    <button id="taskDoneBtn">סיימתי משימה</button>
     <button id="smokedBtn">עישנתי 🚬</button>
 
     <div class="result" id="result" hidden>
@@ -58,8 +202,7 @@
       { text: "כפיפות בטן 10 חזרות על 5 סטים" },
       { text: "לשתות מים" },
       { text: "לחכות 10 דקות" },
-      { text: "לשמוע 5 שירים" },
-      { text: "לשתות תה" }
+      { text: "לשמוע 5 שירים" }
     ];
 
     // ---------------- נתונים ----------------
@@ -71,7 +214,7 @@
       tasksBeforeCurrentSmoke: 0
     };
 
-    // אם עבר יום -> אפס נתונים
+    // איפוס יומי
     if (data.date !== new Date().toDateString()) {
       data = { date: new Date().toDateString(), tasksDone: 0, smokes: [], bestRecord: 0, tasksBeforeCurrentSmoke: 0 };
     }
@@ -86,9 +229,8 @@
       const i = Math.floor(Math.random() * tasks.length);
       document.getElementById("result").hidden = false;
       document.getElementById("taskText").textContent = "▶ " + tasks[i].text;
-    }
 
-    function completeTask() {
+      // כאן נספור משימה שהוגרלה
       data.tasksDone++;
       data.tasksBeforeCurrentSmoke++;
       saveData();
@@ -98,35 +240,37 @@
       const now = Date.now();
       data.smokes.push(now);
 
-      // בדיקה שיא
+      // בדיקה לשיא
       if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
         alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
         data.bestRecord = data.tasksBeforeCurrentSmoke;
       }
 
-      data.tasksBeforeCurrentSmoke = 0; // אפס ספירת משימות לפני עישון
+      data.tasksBeforeCurrentSmoke = 0; // אפס אחרי עישון
       saveData();
     }
 
     function calcAvgSmokeTime() {
-      if (data.smokes.length <= 1) return "--";
-      // לוקחים מהסיגריה השנייה
-      const start = data.smokes[1];
-      const end = data.smokes[data.smokes.length - 1];
-      const total = end - start;
+  if (data.smokes.length <= 1) return "--";
 
-      const count = data.smokes.length - 1; // מחלקים במספר סיגריות פחות הראשונה
-      let avg = total / count;
+  const start = data.smokes[1];
+  const end = data.smokes[data.smokes.length - 1];
+  const total = end - start;
 
-      // הורדת 8 שעות שינה (מספר במילישניות)
-      avg -= 8 * 60 * 60 * 1000;
+  const count = data.smokes.length - 1;
+  let avg = total / count;
 
-      if (avg <= 0) return "--";
+  // נוריד 8 שעות רק אם עבר לפחות 12 שעות מאז הסיגריה השנייה
+  if (total > 12 * 60 * 60 * 1000) {
+    avg -= 8 * 60 * 60 * 1000;
+  }
 
-      const minutes = Math.floor(avg / 60000) % 60;
-      const hours = Math.floor(avg / (1000*60*60));
-      return `${hours} שעות ${minutes} דק׳`;
-    }
+  if (avg <= 0) return "--";
+
+  const minutes = Math.floor(avg / 60000) % 60;
+  const hours = Math.floor(avg / (1000*60*60));
+  return `${hours} שעות ${minutes} דק׳`;
+}
 
     function renderStats() {
       document.getElementById("tasksCount").textContent = data.tasksDone;
@@ -137,7 +281,6 @@
 
     // ---------------- מאזינים ----------------
     document.getElementById("drawBtn").addEventListener("click", drawTask);
-    document.getElementById("taskDoneBtn").addEventListener("click", completeTask);
     document.getElementById("smokedBtn").addEventListener("click", smoked);
 
     // ---------------- הפעלה ראשונית ----------------
