@@ -4,85 +4,143 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>הגרלת משימה יומית</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#ffffff; --ink:#111; --muted:#666; --card:#f6f7fb; --accent1:#6a5af9; --accent2:#19c1ff; }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); color:var(--ink); font-family:"Heebo",system-ui,Arial;
-      display:grid; place-items:center; min-height:100vh; padding:24px;
+    body {
+      font-family: "Heebo", system-ui, Arial;
+      background:#f6f7fb;
+      margin:0; padding:20px;
+      display:grid; place-items:center;
     }
-    .wrap{ width:min(680px,100%); }
-    .card{
-      background:var(--card); border-radius:18px; padding:22px; box-shadow:0 8px 24px rgba(0,0,0,.08);
+    .card {
+      background:#fff; padding:20px; border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,.1);
+      max-width:600px; width:100%;
     }
-    h1{ margin:0 0 12px; font-size:26px; }
-    p.helper{ margin:0 0 18px; color:var(--muted); }
-    .btn{
-      appearance:none; border:0; cursor:pointer; font-weight:600; font-size:18px; color:#fff;
-      padding:14px 20px; border-radius:14px; transition:transform .05s ease, box-shadow .15s ease;
-      background-image:linear-gradient(135deg,var(--accent1),var(--accent2));
-      box-shadow:0 10px 18px rgba(25,193,255,.25);
+    h1 { margin:0 0 12px; }
+    button {
+      padding:10px 16px; border:0; border-radius:10px;
+      background:#6a5af9; color:#fff; font-weight:600;
+      cursor:pointer; margin:5px;
     }
-    .btn:active{ transform:translateY(1px); }
-    .result{
-      margin-top:18px; background:#fff; border-radius:14px; padding:16px; border:1px solid #eee;
-    }
-    .task{ font-size:20px; margin:0 0 6px; }
-    .time{ margin:0; color:var(--muted); }
-    .small{ font-size:14px; color:var(--muted); margin-top:10px; }
+    .result, .stats { margin-top:15px; padding:10px; border:1px solid #ddd; border-radius:10px; background:#fafafa; }
+    .stat-item { margin:4px 0; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>הגרלת משימה</h1>
-      <p class="helper">לחץ על הכפתור ותקבל משימה אקראית מהרשימה שלך.</p>
-      <button class="btn" id="drawBtn">הגרל משימה</button>
+  <div class="card">
+    <h1>הגרלת משימה</h1>
+    <button id="drawBtn">הגרל משימה</button>
+    <button id="taskDoneBtn">סיימתי משימה</button>
+    <button id="smokedBtn">עישנתי 🚬</button>
 
-      <div class="result" id="result" hidden>
-        <p class="task" id="taskText"></p>
-        <p class="time" id="timeText"></p>
-        <p class="small">לחץ שוב כדי להגריל משימה אחרת.</p>
-      </div>
+    <div class="result" id="result" hidden>
+      <p id="taskText"></p>
+    </div>
+
+    <div class="stats">
+      <h3>סטטיסטיקות יומיות</h3>
+      <p class="stat-item">משימות שבוצעו היום: <span id="tasksCount">0</span></p>
+      <p class="stat-item">עישונים היום: <span id="smokesCount">0</span></p>
+      <p class="stat-item">שיא משימות לפני עישון: <span id="bestRecord">0</span></p>
+      <p class="stat-item">ממוצע זמן בין סיגריות: <span id="avgTime">--</span></p>
     </div>
   </div>
 
   <script>
-    // רשימת המשימות החדשה
+    // ---------------- רשימת משימות ----------------
     const tasks = [
-      { text: "5 סטים של 10 חזרות סקווטים", minutes: null },
-      { text: "10 חזרות של 2 סטים של שכיבות שמיכה", minutes: null },
-      { text: "מקלחת קרה", minutes: 15 },
-      { text: "נשימות תרגיל 4-7-8 (4 חזרות)", minutes: 5 },
-      { text: "לאכול משהו בריא", minutes: 10 },
-      { text: "לעשות סיבוב", minutes: 15 },
-      { text: "כפיפות בטן 10 חזרות על 5 סטים", minutes: null },
-      { text: "לשתות מים", minutes: 5 },
-      { text: "לחכות 10 דקות", minutes: 10 },
-      { text: "לשמוע 5 שירים", minutes: 20 }
+      { text: "5 סטים של 10 חזרות סקווטים" },
+      { text: "10 חזרות של 2 סטים של שכיבות שמיכה" },
+      { text: "מקלחת קרה" },
+      { text: "נשימות תרגיל 4-7-8 (4 חזרות)" },
+      { text: "לאכול משהו בריא" },
+      { text: "לעשות סיבוב" },
+      { text: "כפיפות בטן 10 חזרות על 5 סטים" },
+      { text: "לשתות מים" },
+      { text: "לחכות 10 דקות" },
+      { text: "לשמוע 5 שירים" }
     ];
 
-    function drawRandomTask() {
-      if (!tasks.length) return { text: "אין משימות ברשימה." };
-      const i = Math.floor(Math.random() * tasks.length);
-      return tasks[i];
+    // ---------------- נתונים ----------------
+    let data = JSON.parse(localStorage.getItem("smokingApp")) || {
+      date: new Date().toDateString(),
+      tasksDone: 0,
+      smokes: [],
+      bestRecord: 0,
+      tasksBeforeCurrentSmoke: 0
+    };
+
+    // אם עבר יום -> אפס נתונים
+    if (data.date !== new Date().toDateString()) {
+      data = { date: new Date().toDateString(), tasksDone: 0, smokes: [], bestRecord: 0, tasksBeforeCurrentSmoke: 0 };
     }
 
-    const btn = document.getElementById("drawBtn");
-    const result = document.getElementById("result");
-    const taskText = document.getElementById("taskText");
-    const timeText = document.getElementById("timeText");
+    // ---------------- פונקציות ----------------
+    function saveData() {
+      localStorage.setItem("smokingApp", JSON.stringify(data));
+      renderStats();
+    }
 
-    btn.addEventListener("click", () => {
-      const task = drawRandomTask();
-      taskText.textContent = "▶ " + task.text;
-      timeText.textContent = task.minutes ? `משך משוער: ${task.minutes} דק׳` : "משך: לפי תחושה / חזרות";
-      result.hidden = false;
-      if (navigator.vibrate) navigator.vibrate(15);
-    });
+    function drawTask() {
+      const i = Math.floor(Math.random() * tasks.length);
+      document.getElementById("result").hidden = false;
+      document.getElementById("taskText").textContent = "▶ " + tasks[i].text;
+    }
+
+    function completeTask() {
+      data.tasksDone++;
+      data.tasksBeforeCurrentSmoke++;
+      saveData();
+    }
+
+    function smoked() {
+      const now = Date.now();
+      data.smokes.push(now);
+
+      // בדיקה שיא
+      if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
+        alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
+        data.bestRecord = data.tasksBeforeCurrentSmoke;
+      }
+
+      data.tasksBeforeCurrentSmoke = 0; // אפס ספירת משימות לפני עישון
+      saveData();
+    }
+
+    function calcAvgSmokeTime() {
+      if (data.smokes.length <= 1) return "--";
+      // לוקחים מהסיגריה השנייה
+      const start = data.smokes[1];
+      const end = data.smokes[data.smokes.length - 1];
+      const total = end - start;
+
+      const count = data.smokes.length - 1; // מחלקים במספר סיגריות פחות הראשונה
+      let avg = total / count;
+
+      // הורדת 8 שעות שינה (מספר במילישניות)
+      avg -= 8 * 60 * 60 * 1000;
+
+      if (avg <= 0) return "--";
+
+      const minutes = Math.floor(avg / 60000) % 60;
+      const hours = Math.floor(avg / (1000*60*60));
+      return `${hours} שעות ${minutes} דק׳`;
+    }
+
+    function renderStats() {
+      document.getElementById("tasksCount").textContent = data.tasksDone;
+      document.getElementById("smokesCount").textContent = data.smokes.length;
+      document.getElementById("bestRecord").textContent = data.bestRecord;
+      document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+    }
+
+    // ---------------- מאזינים ----------------
+    document.getElementById("drawBtn").addEventListener("click", drawTask);
+    document.getElementById("taskDoneBtn").addEventListener("click", completeTask);
+    document.getElementById("smokedBtn").addEventListener("click", smoked);
+
+    // ---------------- הפעלה ראשונית ----------------
+    renderStats();
   </script>
 </body>
 </html>
