@@ -189,6 +189,7 @@
       <p class="stat-item">עישונים היום: <span id="smokesCount">0</span></p>
       <p class="stat-item">שיא משימות לפני עישון: <span id="bestRecord">0</span></p>
       <p class="stat-item">ממוצע זמן בין סיגריות: <span id="avgTime">--</span></p>
+      <p class="stat-item">סה״כ משימות בהיסטוריה: <span id="totalTasks">0</span></p>
     </div>
   </div>
 
@@ -217,12 +218,18 @@
       tasksDone: 0,
       smokes: [],
       bestRecord: 0,
-      tasksBeforeCurrentSmoke: 0
+      tasksBeforeCurrentSmoke: 0,
+      totalTasksDone: 0   // חדש: מונה כללי שלא מתאפס
     };
 
-    // איפוס יומי
+    // איפוס יומי (רק היומי, לא הכללי)
     if (data.date !== new Date().toDateString()) {
-      data = { date: new Date().toDateString(), tasksDone: 0, smokes: [], bestRecord: 0, tasksBeforeCurrentSmoke: 0 };
+      data.date = new Date().toDateString();
+      data.tasksDone = 0;
+      data.smokes = [];
+      data.bestRecord = 0;
+      data.tasksBeforeCurrentSmoke = 0;
+      // שים לב: totalTasksDone לא מתאפס
     }
 
     // ---------------- פונקציות ----------------
@@ -254,6 +261,7 @@
       document.getElementById("taskText").textContent = "▶ " + task.text;
 
       data.tasksDone++;
+      data.totalTasksDone++;   // מגדיל גם את המונה הכללי
       data.tasksBeforeCurrentSmoke++;
       saveData();
     }
@@ -270,50 +278,53 @@
       data.tasksBeforeCurrentSmoke = 0;
       saveData();
     }
-  function drawRandomTask() {
-  const i = Math.floor(Math.random() * tasks.length);
-  const task = tasks[i];
 
-  document.getElementById("result").hidden = false;
-  document.getElementById("taskText").textContent = "🎲 " + task.text;
+    function drawRandomTask() {
+      const i = Math.floor(Math.random() * tasks.length);
+      const task = tasks[i];
 
-  data.tasksDone++;
-  data.tasksBeforeCurrentSmoke++;
-  saveData();
-}
+      document.getElementById("result").hidden = false;
+      document.getElementById("taskText").textContent = "🎲 " + task.text;
 
-document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
+      data.tasksDone++;
+      data.totalTasksDone++;   // גם כאן מגדיל את המונה הכללי
+      data.tasksBeforeCurrentSmoke++;
+      saveData();
+    }
+
+    document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
 
     function calcAvgSmokeTime() {
-  if (data.smokes.length <= 1) return "--";
+      if (data.smokes.length <= 1) return "--";
 
-  const start = data.smokes[1];
-  const end = Date.now(); // עד עכשיו, לא רק עד הסיגריה האחרונה
-  let total = end - start;
+      const start = data.smokes[1];
+      const end = Date.now(); // עד עכשיו, לא רק עד הסיגריה האחרונה
+      let total = end - start;
 
-  const count = data.smokes.length - 1;
+      const count = data.smokes.length - 1;
 
-  // הפחתה של 8 שעות על כל 24 שעות מלאות שחלפו
-  const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
-  total -= daysPassed * (8 * 60 * 60 * 1000);
+      // הפחתה של 8 שעות על כל 24 שעות מלאות שחלפו
+      const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
+      total -= daysPassed * (8 * 60 * 60 * 1000);
 
-  const avg = total / count;
+      const avg = total / count;
 
-  const minutes = Math.floor(avg / 60000) % 60;
-  const hours = Math.floor(avg / (1000 * 60 * 60));
-  return `${hours} שעות ${minutes} דק׳`;
-}
+      const minutes = Math.floor(avg / 60000) % 60;
+      const hours = Math.floor(avg / (1000 * 60 * 60));
+      return `${hours} שעות ${minutes} דק׳`;
+    }
 
-// עדכון אוטומטי כל 5 שניות
-setInterval(() => {
-  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
-}, 5000);
+    // עדכון אוטומטי כל 5 שניות
+    setInterval(() => {
+      document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+    }, 5000);
 
     function renderStats() {
       document.getElementById("tasksCount").textContent = data.tasksDone;
       document.getElementById("smokesCount").textContent = data.smokes.length;
       document.getElementById("bestRecord").textContent = data.bestRecord;
       document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+      document.getElementById("totalTasks").textContent = data.totalTasksDone; // מראה את המונה הכולל
     }
 
     // ---------------- מאזינים ----------------
@@ -322,6 +333,6 @@ setInterval(() => {
 
     // ---------------- הפעלה ראשונית ----------------
     renderStats();
-  </script>
+</script>
 </body>
 </html>
