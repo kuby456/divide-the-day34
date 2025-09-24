@@ -51,23 +51,18 @@
   </div>
 
   <script>
-    // רשימת המשימות שלך (כולל משך בדקות כשיש)
+    // רשימת המשימות החדשה
     const tasks = [
-      { text: "שתי כוסות מים", minutes: 5 },
-      { text: "לאכול תפוח", minutes: 10 },
-      { text: "סיבוב", minutes: 15 },
-      { text: "10 סקווטים", minutes: 4 },
+      { text: "5 סטים של 10 חזרות סקווטים", minutes: null },
+      { text: "10 חזרות של 2 סטים של שכיבות שמיכה", minutes: null },
       { text: "מקלחת קרה", minutes: 15 },
-      { text: "לאכול תפוז", minutes: 10 },
-      { text: "לסחוט לימון", minutes: 10 },
-      { text: "לשכב במיטה", minutes: 20 },
-      { text: "נשימות", minutes: 8 },
-      { text: "לשתות תה", minutes: 10 },
-      { text: "לעשות מתיחות", minutes: 20 },
-      { text: "לעשות 10 מתח" },
-      { text: "לעשות 10 מקבילים" },
-      { text: "לעשות 10 הרמת רגליים על מוט" },
-      { text: "לצחצח שיניים", minutes: 8 }
+      { text: "נשימות תרגיל 4-7-8 (4 חזרות)", minutes: 5 },
+      { text: "לאכול משהו בריא", minutes: 10 },
+      { text: "לעשות סיבוב", minutes: 15 },
+      { text: "כפיפות בטן 10 חזרות על 5 סטים", minutes: null },
+      { text: "לשתות מים", minutes: 5 },
+      { text: "לחכות 10 דקות", minutes: 10 },
+      { text: "לשמוע 5 שירים", minutes: 20 }
     ];
 
     function drawRandomTask() {
@@ -86,7 +81,6 @@
       taskText.textContent = "▶ " + task.text;
       timeText.textContent = task.minutes ? `משך משוער: ${task.minutes} דק׳` : "משך: לפי תחושה / חזרות";
       result.hidden = false;
-      // רטט קצר במכשיר נייד (אם נתמך)
       if (navigator.vibrate) navigator.vibrate(15);
     });
   </script>
