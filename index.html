@@ -295,24 +295,26 @@
     document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
 
     function calcAvgSmokeTime() {
-      if (data.smokes.length <= 1) return "--";
+  if (data.smokes.length <= 1) return "--";
 
-      const start = data.smokes[1];
-      const end = Date.now(); // עד עכשיו, לא רק עד הסיגריה האחרונה
-      let total = end - start;
+  // זמן כולל מהסיגריה הראשונה ועד עכשיו
+  const start = data.smokes[0];
+  const end = Date.now();
+  let total = end - start;
 
-      const count = data.smokes.length - 1;
+  // מפחיתים 8 שעות מכל יממה שעברה
+  const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
+  total -= daysPassed * (8 * 60 * 60 * 1000);
 
-      // הפחתה של 8 שעות על כל 24 שעות מלאות שחלפו
-      const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
-      total -= daysPassed * (8 * 60 * 60 * 1000);
+  // מחלקים במספר הסיגריות-1
+  const divisor = data.smokes.length - 1;
+  const avg = total / divisor;
 
-      const avg = total / count;
-
-      const minutes = Math.floor(avg / 60000) % 60;
-      const hours = Math.floor(avg / (1000 * 60 * 60));
-      return `${hours} שעות ${minutes} דק׳`;
-    }
+  // ממירים לשעות ודקות
+  const minutes = Math.floor(avg / 60000) % 60;
+  const hours = Math.floor(avg / (1000 * 60 * 60));
+  return `${hours} שעות ${minutes} דק׳`;
+}
 
     // עדכון אוטומטי כל 5 שניות
     setInterval(() => {
