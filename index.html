@@ -123,6 +123,7 @@
       font-size: 1.4rem;
     }
   }
+  
   .stats {
   background: #f9f9f9;
   border-radius: 12px;
@@ -176,6 +177,7 @@
     <h1>הגרלת משימה</h1>
     <button id="drawBtn">הגרל משימה</button>
     <button id="smokedBtn">עישנתי 🚬</button>
+    <button id="drawRandomBtn">אקראי לגמרי 🎲</button>
 
     <div class="result" id="result" hidden>
       <p id="taskText"></p>
@@ -190,7 +192,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     // ---------------- רשימת משימות ----------------
     const tasks = [
       { text: "5 סטים של 10 חזרות סקווטים" },
@@ -204,6 +206,10 @@
       { text: "לחכות 10 דקות" },
       { text: "לשמוע 5 שירים" }
     ];
+
+    // נבנה דק שמערבב משימות
+    let currentDeck = shuffle([...tasks]);
+    let currentIndex = 0;
 
     // ---------------- נתונים ----------------
     let data = JSON.parse(localStorage.getItem("smokingApp")) || {
@@ -225,12 +231,28 @@
       renderStats();
     }
 
-    function drawTask() {
-      const i = Math.floor(Math.random() * tasks.length);
-      document.getElementById("result").hidden = false;
-      document.getElementById("taskText").textContent = "▶ " + tasks[i].text;
+    // ערבוב משימות (Fisher-Yates)
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
 
-      // כאן נספור משימה שהוגרלה
+    function drawTask() {
+      // אם סיימנו את החפיסה – נבנה חדשה
+      if (currentIndex >= currentDeck.length) {
+        currentDeck = shuffle([...tasks]);
+        currentIndex = 0;
+      }
+
+      const task = currentDeck[currentIndex];
+      currentIndex++;
+
+      document.getElementById("result").hidden = false;
+      document.getElementById("taskText").textContent = "▶ " + task.text;
+
       data.tasksDone++;
       data.tasksBeforeCurrentSmoke++;
       saveData();
@@ -240,37 +262,52 @@
       const now = Date.now();
       data.smokes.push(now);
 
-      // בדיקה לשיא
       if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
         alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
         data.bestRecord = data.tasksBeforeCurrentSmoke;
       }
 
-      data.tasksBeforeCurrentSmoke = 0; // אפס אחרי עישון
+      data.tasksBeforeCurrentSmoke = 0;
       saveData();
     }
+  function drawRandomTask() {
+  const i = Math.floor(Math.random() * tasks.length);
+  const task = tasks[i];
+
+  document.getElementById("result").hidden = false;
+  document.getElementById("taskText").textContent = "🎲 " + task.text;
+
+  data.tasksDone++;
+  data.tasksBeforeCurrentSmoke++;
+  saveData();
+}
+
+document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
 
     function calcAvgSmokeTime() {
   if (data.smokes.length <= 1) return "--";
 
   const start = data.smokes[1];
-  const end = data.smokes[data.smokes.length - 1];
-  const total = end - start;
+  const end = Date.now(); // עד עכשיו, לא רק עד הסיגריה האחרונה
+  let total = end - start;
 
   const count = data.smokes.length - 1;
-  let avg = total / count;
 
-  // נוריד 8 שעות רק אם עבר לפחות 12 שעות מאז הסיגריה השנייה
-  if (total > 12 * 60 * 60 * 1000) {
-    avg -= 8 * 60 * 60 * 1000;
-  }
+  // הפחתה של 8 שעות על כל 24 שעות מלאות שחלפו
+  const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
+  total -= daysPassed * (8 * 60 * 60 * 1000);
 
-  if (avg <= 0) return "--";
+  const avg = total / count;
 
   const minutes = Math.floor(avg / 60000) % 60;
-  const hours = Math.floor(avg / (1000*60*60));
+  const hours = Math.floor(avg / (1000 * 60 * 60));
   return `${hours} שעות ${minutes} דק׳`;
 }
+
+// עדכון אוטומטי כל 5 שניות
+setInterval(() => {
+  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+}, 5000);
 
     function renderStats() {
       document.getElementById("tasksCount").textContent = data.tasksDone;
