@@ -195,7 +195,8 @@
 
 <script>
     // ---------------- רשימת משימות ----------------
-    const tasks = [
+    // ---------------- רשימת משימות ----------------
+const tasks = [
   { text: "5 סטים של 10 חזרות סקווטים" },
   { text: "10 חזרות של 2 סטים של שכיבות שמיכה" },
   { text: "מקלחת קרה" },
@@ -229,137 +230,130 @@
   { text: "לעשות מתיחות לבטן – 30 שניות" },
   { text: "לעשות מתיחות לכפות ידיים – 30 שניות כל מתיחה" },
   { text: "לאכול פרוסה נוטלה" },
-  { text: "לצאת לשני סיבובים" },
-        { text: " לעשות סשן שלם של אירובי באפליקציה " }
+  { text: "לצאת לשני סיבובים" }
 ];
 
-    // נבנה דק שמערבב משימות
-    let currentDeck = shuffle([...tasks]);
-    let currentIndex = 0;
+// נבנה דק שמערבב משימות
+let currentDeck = shuffle([...tasks]);
+let currentIndex = 0;
 
-    // ---------------- נתונים ----------------
-    let data = JSON.parse(localStorage.getItem("smokingApp")) || {
-      date: new Date().toDateString(),
-      tasksDone: 0,
-      smokes: [],
-      bestRecord: 0,
-      tasksBeforeCurrentSmoke: 0,
-      totalTasksDone: 0   // חדש: מונה כללי שלא מתאפס
-    };
+// ---------------- נתונים ----------------
+let data = JSON.parse(localStorage.getItem("smokingApp")) || {
+  date: new Date().toDateString(),
+  tasksDone: 0,
+  smokes: [],
+  bestRecord: 0,
+  tasksBeforeCurrentSmoke: 0,
+  totalTasksDone: 0   // מונה כללי שלא מתאפס
+};
 
-    // איפוס יומי (רק היומי, לא הכללי)
-    if (data.date !== new Date().toDateString()) {
-      data.date = new Date().toDateString();
-      data.tasksDone = 0;
-      data.smokes = [];
-      data.bestRecord = 0;
-      data.tasksBeforeCurrentSmoke = 0;
-      // שים לב: totalTasksDone לא מתאפס
-    }
+// איפוס יומי (משימות + סיגריות בלבד)
+if (data.date !== new Date().toDateString()) {
+  data.date = new Date().toDateString();
+  data.tasksDone = 0;
+  data.smokes = [];
+  data.tasksBeforeCurrentSmoke = 0;
+  // שים לב: bestRecord ו-totalTasksDone לא מתאפסים
+  saveData();
+}
 
-    // ---------------- פונקציות ----------------
-    function saveData() {
-      localStorage.setItem("smokingApp", JSON.stringify(data));
-      renderStats();
-    }
+// ---------------- פונקציות ----------------
+function saveData() {
+  localStorage.setItem("smokingApp", JSON.stringify(data));
+  renderStats();
+}
 
-    // ערבוב משימות (Fisher-Yates)
-    function shuffle(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
+// ערבוב משימות (Fisher-Yates)
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
-    function drawTask() {
-      // אם סיימנו את החפיסה – נבנה חדשה
-      if (currentIndex >= currentDeck.length) {
-        currentDeck = shuffle([...tasks]);
-        currentIndex = 0;
-      }
+function drawTask() {
+  if (currentIndex >= currentDeck.length) {
+    currentDeck = shuffle([...tasks]);
+    currentIndex = 0;
+  }
+  const task = currentDeck[currentIndex];
+  currentIndex++;
 
-      const task = currentDeck[currentIndex];
-      currentIndex++;
+  document.getElementById("result").hidden = false;
+  document.getElementById("taskText").textContent = "▶ " + task.text;
 
-      document.getElementById("result").hidden = false;
-      document.getElementById("taskText").textContent = "▶ " + task.text;
+  data.tasksDone++;
+  data.totalTasksDone++;
+  data.tasksBeforeCurrentSmoke++;
+  saveData();
+}
 
-      data.tasksDone++;
-      data.totalTasksDone++;   // מגדיל גם את המונה הכללי
-      data.tasksBeforeCurrentSmoke++;
-      saveData();
-    }
+function smoked() {
+  const now = Date.now();
+  data.smokes.push(now);
 
-    function smoked() {
-      const now = Date.now();
-      data.smokes.push(now);
+  if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
+    alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
+    data.bestRecord = data.tasksBeforeCurrentSmoke;
+  }
 
-      if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
-        alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
-        data.bestRecord = data.tasksBeforeCurrentSmoke;
-      }
+  data.tasksBeforeCurrentSmoke = 0;
+  saveData();
+}
 
-      data.tasksBeforeCurrentSmoke = 0;
-      saveData();
-    }
+function drawRandomTask() {
+  const i = Math.floor(Math.random() * tasks.length);
+  const task = tasks[i];
 
-    function drawRandomTask() {
-      const i = Math.floor(Math.random() * tasks.length);
-      const task = tasks[i];
+  document.getElementById("result").hidden = false;
+  document.getElementById("taskText").textContent = "🎲 " + task.text;
 
-      document.getElementById("result").hidden = false;
-      document.getElementById("taskText").textContent = "🎲 " + task.text;
+  data.tasksDone++;
+  data.totalTasksDone++;
+  data.tasksBeforeCurrentSmoke++;
+  saveData();
+}
 
-      data.tasksDone++;
-      data.totalTasksDone++;   // גם כאן מגדיל את המונה הכללי
-      data.tasksBeforeCurrentSmoke++;
-      saveData();
-    }
+document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
 
-    document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
-
-    function calcAvgSmokeTime() {
+function calcAvgSmokeTime() {
   if (data.smokes.length <= 1) return "--";
 
-  // זמן כולל מהסיגריה הראשונה ועד עכשיו
   const start = data.smokes[0];
   const end = Date.now();
   let total = end - start;
 
-  // מפחיתים 8 שעות מכל יממה שעברה
   const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
   total -= daysPassed * (8 * 60 * 60 * 1000);
 
-  // מחלקים במספר הסיגריות-1
   const divisor = data.smokes.length - 1;
   const avg = total / divisor;
 
-  // ממירים לשעות ודקות
   const minutes = Math.floor(avg / 60000) % 60;
   const hours = Math.floor(avg / (1000 * 60 * 60));
   return `${hours} שעות ${minutes} דק׳`;
 }
 
-    // עדכון אוטומטי כל 5 שניות
-    setInterval(() => {
-      document.getElementById("avgTime").textContent = calcAvgSmokeTime();
-    }, 5000);
+// עדכון אוטומטי כל 5 שניות
+setInterval(() => {
+  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+}, 5000);
 
-    function renderStats() {
-      document.getElementById("tasksCount").textContent = data.tasksDone;
-      document.getElementById("smokesCount").textContent = data.smokes.length;
-      document.getElementById("bestRecord").textContent = data.bestRecord;
-      document.getElementById("avgTime").textContent = calcAvgSmokeTime();
-      document.getElementById("totalTasks").textContent = data.totalTasksDone; // מראה את המונה הכולל
-    }
+function renderStats() {
+  document.getElementById("tasksCount").textContent = data.tasksDone;
+  document.getElementById("smokesCount").textContent = data.smokes.length;
+  document.getElementById("bestRecord").textContent = data.bestRecord;
+  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
+  document.getElementById("totalTasks").textContent = data.totalTasksDone;
+}
 
-    // ---------------- מאזינים ----------------
-    document.getElementById("drawBtn").addEventListener("click", drawTask);
-    document.getElementById("smokedBtn").addEventListener("click", smoked);
+// ---------------- מאזינים ----------------
+document.getElementById("drawBtn").addEventListener("click", drawTask);
+document.getElementById("smokedBtn").addEventListener("click", smoked);
 
-    // ---------------- הפעלה ראשונית ----------------
-    renderStats();
+// ---------------- הפעלה ראשונית ----------------
+renderStats();
 </script>
 </body>
 </html>
