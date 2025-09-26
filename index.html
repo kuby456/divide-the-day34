@@ -244,7 +244,8 @@ let data = JSON.parse(localStorage.getItem("smokingApp")) || {
   smokes: [],
   bestRecord: 0,
   tasksBeforeCurrentSmoke: 0,
-  totalTasksDone: 0   // מונה כללי שלא מתאפס
+  totalTasksDone: 0,   // מונה משימות היסטורי
+  totalSmokes: 0       // ← מונה סיגריות היסטורי
 };
 
 // איפוס יומי (משימות + סיגריות בלבד)
@@ -292,6 +293,7 @@ function drawTask() {
 function smoked() {
   const now = Date.now();
   data.smokes.push(now);
+  data.totalSmokes++;   // ← מגדילים מונה סיגריות כללי
 
   if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
     alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
@@ -318,16 +320,17 @@ function drawRandomTask() {
 document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
 
 function calcAvgSmokeTime() {
-  if (data.smokes.length <= 1) return "--";
+  if (data.totalSmokes <= 1) return "--";
 
   const start = data.smokes[0];
   const end = Date.now();
   let total = end - start;
 
+  // הפחתת 8 שעות לכל 24 שעות שעברו
   const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
   total -= daysPassed * (8 * 60 * 60 * 1000);
 
-  const divisor = data.smokes.length - 1;
+  const divisor = data.totalSmokes - 1;   // ← משתמשים בסך כל הסיגריות
   const avg = total / divisor;
 
   const minutes = Math.floor(avg / 60000) % 60;
