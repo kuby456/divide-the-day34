@@ -170,6 +170,25 @@
   text-align: center;
   margin-right: 10px;
 }
+  .stat-item.ggg {
+    text-align: center;                
+    font-size: 15px;                   /* טקסט קטן יחסית */
+    font-weight: bold;
+    color: #d32f2f;                    /* אדום עדין */
+    background: rgba(0, 0, 255, 0.1);  /* רקע כחול שקוף */
+    border: 2px solid rgba(0,0,0,0.3); /* מסגרת */
+    padding: 20px 30px;
+    display: inline-block;
+    border-radius: 12px;
+    animation: textPulse 1s infinite;  /* אנימציית הטקסט */
+  }
+
+  /* רק הטקסט גדל ומצטמצם */
+ @keyframes textPulse {
+  0%   { font-size: 19px; }
+  50%  { font-size: 23px; }
+  100% { font-size: 19px; }
+}
 </style>
 </head>
 <body>
@@ -183,22 +202,7 @@
       <p id="taskText"></p>
     </div>
  <div style="text-align: center;">
-  <span style="
-    display: inline-block;
-    color: red;
-    font-weight: bolder;
-    font-size: 25px;
-    background-color: rgba(0, 0, 255, 0.3);
-    width: 100px;
-    height: 250px;
-    padding: 30px;
-    text-align: center;
-    line-height: 30px;
-    border-radius: 8px;
-   margin-top :10px;
-  ">
-    לעשן 3 פארשים כל סיגריה! כלומר לא לקחת לריאות שלוש שכטות
-  </span>
+  
 </div>
     <div class="stats">
       <h3>סטטיסטיקות יומיות</h3>
@@ -207,6 +211,9 @@
       <p class="stat-item">שיא משימות לפני עישון: <span id="bestRecord">0</span></p>
       <p class="stat-item">ממוצע זמן בין סיגריות: <span id="avgTime">--</span></p>
       <p class="stat-item">סה״כ משימות בהיסטוריה: <span id="totalTasks">0</span></p>
+     <p class="stat-item ggg">לעשן 3 פארשים!!!</p>
+
+
     </div>
   </div>
 
