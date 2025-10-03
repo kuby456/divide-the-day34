@@ -197,6 +197,9 @@
     <button id="drawBtn">הגרל משימה</button>
     <button id="smokedBtn">עישנתי 🚬</button>
     <button id="drawRandomBtn">אקראי לגמרי 🎲</button>
+    <button id="gumBtn">לקחת מסטיק 🍬</button>
+<button id="timerBtn">טיימר 15 דקות ⏱️</button>
+<div class="result" id="timerDisplay" hidden></div>
 
     <div class="result" id="result" hidden>
       <p id="taskText"></p>
@@ -381,6 +384,69 @@ function renderStats() {
 document.getElementById("drawBtn").addEventListener("click", drawTask);
 document.getElementById("smokedBtn").addEventListener("click", smoked);
 
+  // ---------- מסטיק ----------
+function takeGum() {
+  data.tasksDone++;
+  data.totalTasksDone++;
+  data.tasksBeforeCurrentSmoke++;
+  saveData();
+  alert("לקחת מסטיק ✅ נספר כמשימה!");
+}
+
+// ---------- טיימר 15 דקות ----------
+let timerInterval = null;
+
+function start15MinTimer() {
+  const endTime = Date.now() + (15 * 60 * 1000);
+  localStorage.setItem("timerEnd", endTime);
+
+  data.tasksDone++;
+  data.totalTasksDone++;
+  data.tasksBeforeCurrentSmoke++;
+  saveData();
+
+  showTimer();
+}
+
+function showTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+
+  const timerDisplay = document.getElementById("timerDisplay");
+  timerDisplay.hidden = false;
+
+  timerInterval = setInterval(() => {
+    const endTime = parseInt(localStorage.getItem("timerEnd"));
+    if (!endTime) {
+      timerDisplay.textContent = "⏱️ אין טיימר פעיל";
+      clearInterval(timerInterval);
+      return;
+    }
+
+    let remaining = Math.floor((endTime - Date.now()) / 1000);
+
+    // 👇 כאן נכנס הקטע החדש
+    if (!endTime || remaining <= 0) {
+      timerDisplay.textContent = "⏰ נגמר!";
+      localStorage.removeItem("timerEnd");
+      clearInterval(timerInterval);
+      return;
+    }
+
+    let minutes = Math.floor(remaining / 60);
+    let seconds = remaining % 60;
+    timerDisplay.textContent =
+      "⏱️ נשאר: " + String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+  }, 1000);
+}
+
+// ---------- מאזינים חדשים ----------
+document.getElementById("gumBtn").addEventListener("click", takeGum);
+document.getElementById("timerBtn").addEventListener("click", start15MinTimer);
+
+// ---------- חידוש טיימר אם נשאר מהפעלה קודמת ----------
+if (localStorage.getItem("timerEnd")) {
+  showTimer();
+}
 // ---------------- הפעלה ראשונית ----------------
 renderStats();
 </script>
