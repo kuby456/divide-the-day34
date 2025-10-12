@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מונה סיגריות יומי</title>
+<title>מונה סיגריות + טיימר</title>
 <style>
   body {
     font-family: "Heebo", sans-serif;
@@ -45,111 +45,81 @@
     font-weight: bold;
     color: #333;
   }
-</style>
-  <style>
-body {
-  font-family: "Heebo", sans-serif;
-  text-align: center;
-  background: linear-gradient(135deg, #e0eaff, #f6f7fb);
-  margin: 0;
-  padding: 30px;
-}
-
-h1 {
-  color: #1e3a8a;
-  margin-bottom: 20px;
-}
-
-input {
-  width: 120px;
-  font-size: 18px;
-  padding: 8px;
-  margin: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  text-align: center;
-}
-
-button {
-  font-size: 18px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  transition: 0.2s;
-  margin: 5px;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-#timer {
-  font-size: 48px;
-  margin-top: 30px;
-  color: #111;
-}
-
-.container {
-  max-width: 400px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.1);
-}
+  #timer {
+    font-size: 48px;
+    margin-top: 20px;
+    color: #111;
+  }
 </style>
 </head>
 <body>
   <h1>⏳ טיימר לפי בחירה</h1>
   <p>הכנס כמה דקות שתרצה:</p>
- <input id="minutes">
-<div id="timer"></div>
-<button onclick="startTimer()">התחל</button>
-<button onclick="resetTimer()">איפוס</button>
+  <input id="minutes" type="number" placeholder="לדוגמה: 60">
+  <div id="timer">00:00</div>
+  <button onclick="startTimer()">התחל</button>
+  <button onclick="resetTimer()">איפוס</button>
+
   <script>
-    let countdown;
-let time = 0;
+  let countdown;
+  let time = 0;
 
-function startTimer() {
-  clearInterval(countdown);
-  const mins = parseInt(document.getElementById('minutes').value);
-  if (isNaN(mins) || mins <= 0) {
-    alert("אנא הכנס מספר דקות חיובי");
-    return;
-  }
-  time = mins * 60;
-
-  countdown = setInterval(() => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    document.getElementById('timer').textContent =
-      `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    time--;
-
-    if (time < 0) {
-      clearInterval(countdown);
-      document.getElementById('timer').textContent = "⏰ נגמר הזמן!";
+  // --- טעינת טיימר קיים מה-localStorage ---
+  const savedEnd = localStorage.getItem("timerEnd");
+  if (savedEnd) {
+    const remaining = Math.floor((new Date(savedEnd) - new Date()) / 1000);
+    if (remaining > 0) {
+      time = remaining;
+      startCountdown();
+    } else {
+      localStorage.removeItem("timerEnd");
     }
-  }, 1000);
-}
+  }
 
-function resetTimer() {
-  clearInterval(countdown);
-  time = 0;
-  document.getElementById('timer').textContent = "00:00";
-  document.getElementById('minutes').value = "";
-}
+  function startTimer() {
+    clearInterval(countdown);
+    const mins = parseInt(document.getElementById('minutes').value);
+    if (isNaN(mins) || mins <= 0) {
+      alert("אנא הכנס מספר דקות חיובי");
+      return;
+    }
+    time = mins * 60;
+    const endTime = new Date(Date.now() + time * 1000);
+    localStorage.setItem("timerEnd", endTime.toISOString());
+    startCountdown();
+  }
+
+  function startCountdown() {
+    countdown = setInterval(() => {
+      const remaining = Math.floor((new Date(localStorage.getItem("timerEnd")) - new Date()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(countdown);
+        localStorage.removeItem("timerEnd");
+        document.getElementById('timer').textContent = "⏰ נגמר הזמן!";
+        return;
+      }
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+      document.getElementById('timer').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(countdown);
+    localStorage.removeItem("timerEnd");
+    time = 0;
+    document.getElementById('timer').textContent = "00:00";
+    document.getElementById('minutes').value = "";
+  }
   </script>
+
   <h1>🚬 מונה סיגריות יומי</h1>
   <h2 id="todayTitle"></h2>
   <div>
     <button id="addBtn">➕ הוסף סיגריה</button>
   </div>
   <p>היום עישנת: <span id="todayCount">0</span></p>
-
   <div class="day-list" id="weekList"></div>
   <div class="summary" id="weekSummary"></div>
 
@@ -160,7 +130,7 @@ function resetTimer() {
   const weekSummary = document.getElementById("weekSummary");
   const todayTitle = document.getElementById("todayTitle");
 
-  // תאריך היום בפורמט YYYY-MM-DD
+  // תאריך היום
   const today = new Date().toISOString().split("T")[0];
   todayTitle.textContent = "תאריך: " + today.split("-").reverse().join("/");
 
