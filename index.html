@@ -1,454 +1,110 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>הגרלת משימה יומית</title>
-  <style>
-  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מונה סיגריות יומי</title>
+<style>
   body {
-    font-family: "Heebo", system-ui, Arial, sans-serif;
-    background: linear-gradient(135deg, #e0eaff 0%, #f6f7fb 100%);
-    margin: 0;
-    padding: 32px;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    animation: bgFade 5s linear infinite alternate;
+    font-family: "Heebo", sans-serif;
+    background: linear-gradient(135deg, #e0eaff, #f6f7fb);
+    text-align: center;
+    padding: 20px;
   }
-
-  @keyframes bgFade {
-    0% { background-position: left; }
-    100% { background-position: right; }
-  }
-
-  .card {
-    background: linear-gradient(110deg, #ffffff 70%, #e4e6f7 100%);
-    padding: 32px 28px;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(106, 90, 249, 0.15), 0 2px 6px rgba(0,0,0,.06);
-    max-width: 500px;
-    width: 100%;
-    transition: box-shadow 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card::before {
-    content: "";
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 140px; height: 140px;
-    background: radial-gradient(circle, #6a5af920 60%, transparent 100%);
-    z-index: 0;
-  }
-
-  h1 {
-    margin: 0 0 18px;
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #6a5af9;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 8px rgba(106, 90, 249, 0.07);
-  }
-
+  h1 { margin-bottom: 5px; }
   button {
-    padding: 12px 22px;
+    padding: 10px 20px;
+    font-size: 18px;
     border: none;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #6a5af9 60%, #7f6dfc 100%);
+    border-radius: 8px;
+    background: #2563eb;
     color: #fff;
-    font-weight: 700;
-    font-size: 1.05rem;
     cursor: pointer;
-    margin: 7px 5px 0 0;
-    box-shadow: 0 2px 8px rgba(106, 90, 249, 0.08);
-    transition: background 0.2s, transform 0.13s;
-    outline: none;
+    margin: 10px;
   }
-
-  button:hover, button:focus {
-    background: linear-gradient(90deg, #7f6dfc 60%, #6a5af9 100%);
-    transform: translateY(-2px) scale(1.05);
-  }
-
-  .result, .stats {
-    margin-top: 18px;
-    padding: 14px 16px;
-    border: 1px solid #dedcfb;
+  button:active { background: #1e40af; }
+  .day-list {
+    margin-top: 20px;
+    max-width: 400px;
+    background: white;
     border-radius: 12px;
-    background: linear-gradient(90deg, #fafafa 80%, #f4f5fe 100%);
-    font-size: 1rem;
-    color: #4d4d66;
-    box-shadow: 0 1px 5px rgba(106, 90, 249, 0.05);
-    position: relative;
-    z-index: 1;
-    transition: box-shadow 0.2s;
+    padding: 15px;
+    margin-inline: auto;
+    box-shadow: 0 2px 10px #0001;
+    text-align: right;
   }
-
-  .result {
-    border-left: 4px solid #6a5af9;
-    font-weight: 500;
+  .day-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
   }
-
-  .stats {
-    border-left: 4px solid #fdc46a;
-    background: linear-gradient(90deg, #faf7f4 80%, #fdf6ee 100%);
-  }
-
-  .stat-item {
-    margin: 6px 0;
-    padding-left: 8px;
-    font-size: 0.98rem;
-    position: relative;
-  }
-  .stat-item::before {
-    content: "•";
-    color: #fdc46a;
-    font-size: 1.1rem;
-    position: absolute;
-    left: -12px;
-    top: 0;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    .card {
-      padding: 20px 8px;
-      max-width: 98vw;
-      border-radius: 10px;
-    }
-    h1 {
-      font-size: 1.4rem;
-    }
-  }
-  
-  .stats {
-  background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  padding: 28px 22px;
-  max-width: 340px;
-  margin: 24px auto;
-  direction: rtl;
-  font-family: "Segoe UI", Arial, sans-serif;
-}
-
-.stats h3 {
-  margin-top: 0;
-  margin-bottom: 18px;
-  font-size: 1.35rem;
-  color: #284266;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-align: center;
-}
-
-.stat-item {
-  font-size: 1.05rem;
-  color: #333;
-  margin: 12px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 6px;
-}
-
-.stat-item:last-child {
-  border-bottom: none;
-}
-
-.stat-item span {
-  font-weight: bold;
-  color: #2e8b57;
-  background: #eafbe7;
-  border-radius: 6px;
-  padding: 2px 10px;
-  min-width: 32px;
-  text-align: center;
-  margin-right: 10px;
-}
-  .stat-item.ggg {
-    text-align: center;                
-    font-size: 15px;                   /* טקסט קטן יחסית */
+  .summary {
+    margin-top: 15px;
+    font-size: 18px;
     font-weight: bold;
-    color: #d32f2f;                    /* אדום עדין */
-    background: rgba(0, 0, 255, 0.1);  /* רקע כחול שקוף */
-    border: 2px solid rgba(0,0,0,0.3); /* מסגרת */
-    padding: 20px 30px;
-    display: inline-block;
-    border-radius: 12px;
-    animation: textPulse 1s infinite;  /* אנימציית הטקסט */
+    color: #333;
   }
-
-  /* רק הטקסט גדל ומצטמצם */
- @keyframes textPulse {
-  0%   { font-size: 19px; }
-  50%  { font-size: 23px; }
-  100% { font-size: 19px; }
-}
 </style>
 </head>
 <body>
-  <div class="card">
-     <h1>הגרלת משימה</h1>
-    <button id="drawBtn">הגרל משימה</button>
-    <button id="smokedBtn">עישנתי 🚬</button>
-    <button id="drawRandomBtn">אקראי לגמרי 🎲</button>
-    <button id="gumBtn">לקחת מסטיק 🍬</button>
-<button id="timerBtn">טיימר 15 דקות ⏱️</button>
-<div class="result" id="timerDisplay" hidden></div>
-
-    <div class="result" id="result" hidden>
-      <p id="taskText"></p>
-    </div>
- <div style="text-align: center;">
-  
-</div>
-    <div class="stats">
-      <h3>סטטיסטיקות יומיות</h3>
-      <p class="stat-item">משימות שבוצעו היום: <span id="tasksCount">0</span></p>
-      <p class="stat-item">עישונים היום: <span id="smokesCount">0</span></p>
-      <p class="stat-item">שיא משימות לפני עישון: <span id="bestRecord">0</span></p>
-      <p class="stat-item">ממוצע זמן בין סיגריות: <span id="avgTime">--</span></p>
-      <p class="stat-item">סה״כ משימות בהיסטוריה: <span id="totalTasks">0</span></p>
-     <p class="stat-item ggg">לעשן 3 פארשים!!!</p>
-
-
-    </div>
+  <h1>🚬 מונה סיגריות יומי</h1>
+  <h2 id="todayTitle"></h2>
+  <div>
+    <button id="addBtn">➕ הוסף סיגריה</button>
   </div>
+  <p>היום עישנת: <span id="todayCount">0</span></p>
+
+  <div class="day-list" id="weekList"></div>
+  <div class="summary" id="weekSummary"></div>
 
 <script>
-    // ---------------- רשימת משימות ----------------
-    // ---------------- רשימת משימות ----------------
-const tasks = [
-  { text: "5 סטים של 10 חזרות סקווטים" },
-  { text: "10 חזרות של 2 סטים של שכיבות שמיכה" },
-  { text: "מקלחת קרה" },
-  { text: "נשימות תרגיל 4-7-8 (4 חזרות)" },
-  { text: "לאכול משהו בריא" },
-  { text: "לעשות סיבוב" },
-  { text: "כפיפות בטן 10 חזרות על 5 סטים" },
-  { text: "לשתות מים" },
-  { text: "לחכות 10 דקות" },
-  { text: "לשמוע 5 שירים" },
+  const addBtn = document.getElementById("addBtn");
+  const todayCount = document.getElementById("todayCount");
+  const weekList = document.getElementById("weekList");
+  const weekSummary = document.getElementById("weekSummary");
+  const todayTitle = document.getElementById("todayTitle");
 
-  // החדשים:
-  { text: "לשתות תה" },
-  { text: "לשחק שלוש משחקוני איקס עיגול" },
-  { text: "לשחק שתי משחקי שחמט" },
-  { text: "ללמוד רוסית ולעבור סשן" },
-  { text: "לשחק שתי משחקוני דוראק" },
-  { text: "לשחק משחק אחד של רמי קיוב" },
-  { text: "לשחק שלוש משחקי ששבש" },
-  { text: "לשחק סודוקו אחד" },
-  { text: "לשמוע 3 שירים" },
-  { text: "לשמוע 2 שירים" },
-  { text: "לשמוע שיר אחד" },
-  { text: "לשחק 5 חלקים של מבוך" },
-  { text: "לאכול סוכריה" },
-  { text: "לעשות מתיחות באפליקציה" },
-  { text: "לעשות מתיחות לרגליים – 30 שניות כל מתיחה" },
-  { text: "לעשות מתיחות לחזה – 30 שניות" },
-  { text: "לעשות מתיחות לכתפיים – 30 שניות כל מתיחה" },
-  { text: "לעשות מתיחות לכנפיים – 30 שניות" },
-  { text: "לעשות מתיחות לבטן – 30 שניות" },
-  { text: "לעשות מתיחות לכפות ידיים – 30 שניות כל מתיחה" },
-  { text: "לאכול פרוסה נוטלה" },
-  { text: "לצאת לשני סיבובים" },
-  { text: "לשבת 15 דקות לפחות עם הגיטרה" }
-  
-];
+  // תאריך היום בפורמט YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0];
+  todayTitle.textContent = "תאריך: " + today.split("-").reverse().join("/");
 
-// נבנה דק שמערבב משימות
-let currentDeck = shuffle([...tasks]);
-let currentIndex = 0;
+  // טעינת נתונים קודמים
+  let weekData = JSON.parse(localStorage.getItem("weekData") || "{}");
 
-// ---------------- נתונים ----------------
-let data = JSON.parse(localStorage.getItem("smokingApp")) || {
-  date: new Date().toDateString(),
-  tasksDone: 0,
-  smokes: [],
-  bestRecord: 0,
-  tasksBeforeCurrentSmoke: 0,
-  totalTasksDone: 0,   // מונה משימות היסטורי
-  totalSmokes: 0       // ← מונה סיגריות היסטורי
-};
-
-// איפוס יומי (משימות + סיגריות בלבד)
-if (data.date !== new Date().toDateString()) {
-  data.date = new Date().toDateString();
-  data.tasksDone = 0;
-  data.smokes = [];
-  data.tasksBeforeCurrentSmoke = 0;
-  // שים לב: bestRecord ו-totalTasksDone לא מתאפסים
-  saveData();
-}
-
-// ---------------- פונקציות ----------------
-function saveData() {
-  localStorage.setItem("smokingApp", JSON.stringify(data));
-  renderStats();
-}
-
-// ערבוב משימות (Fisher-Yates)
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function drawTask() {
-  if (currentIndex >= currentDeck.length) {
-    currentDeck = shuffle([...tasks]);
-    currentIndex = 0;
-  }
-  const task = currentDeck[currentIndex];
-  currentIndex++;
-
-  document.getElementById("result").hidden = false;
-  document.getElementById("taskText").textContent = "▶ " + task.text;
-
-  data.tasksDone++;
-  data.totalTasksDone++;
-  data.tasksBeforeCurrentSmoke++;
-  saveData();
-}
-
-function smoked() {
-  const now = Date.now();
-  data.smokes.push(now);
-  data.totalSmokes++;   // ← מגדילים מונה סיגריות כללי
-
-  if (data.tasksBeforeCurrentSmoke > data.bestRecord) {
-    alert("שברת שיא! 💪 " + data.tasksBeforeCurrentSmoke + " משימות לפני סיגריה!");
-    data.bestRecord = data.tasksBeforeCurrentSmoke;
+  // אם זה יום חדש – אפס ערך חדש ליום הנוכחי
+  if (!weekData[today]) {
+    weekData[today] = 0;
+    localStorage.setItem("weekData", JSON.stringify(weekData));
   }
 
-  data.tasksBeforeCurrentSmoke = 0;
-  saveData();
-}
+  // הצגת כמות היום
+  todayCount.textContent = weekData[today];
 
-function drawRandomTask() {
-  const i = Math.floor(Math.random() * tasks.length);
-  const task = tasks[i];
+  // הוספת סיגריה
+  addBtn.onclick = () => {
+    weekData[today]++;
+    localStorage.setItem("weekData", JSON.stringify(weekData));
+    todayCount.textContent = weekData[today];
+    renderWeek();
+  };
 
-  document.getElementById("result").hidden = false;
-  document.getElementById("taskText").textContent = "🎲 " + task.text;
+  // הצגת רשימת כל הימים
+  function renderWeek() {
+    weekList.innerHTML = "";
+    const days = Object.keys(weekData).sort();
+    let total = 0;
+    days.forEach(d => {
+      total += weekData[d];
+      const div = document.createElement("div");
+      div.className = "day-item";
+      div.innerHTML = `<span>${d.split("-").reverse().join("/")}</span><span>${weekData[d]} 🚬</span>`;
+      weekList.appendChild(div);
+    });
+    weekSummary.textContent = "סה\"כ עד היום: " + total + " סיגריות";
+  }
 
-  data.tasksDone++;
-  data.totalTasksDone++;
-  data.tasksBeforeCurrentSmoke++;
-  saveData();
-}
-
-document.getElementById("drawRandomBtn").addEventListener("click", drawRandomTask);
-
-function calcAvgSmokeTime() {
-  if (data.totalSmokes <= 1) return "--";
-
-  const start = data.smokes[0];
-  const end = Date.now();
-  let total = end - start;
-
-  // הפחתת 8 שעות לכל 24 שעות שעברו
-  const daysPassed = Math.floor(total / (24 * 60 * 60 * 1000));
-  total -= daysPassed * (8 * 60 * 60 * 1000);
-
-  const divisor = data.totalSmokes - 1;   // ← משתמשים בסך כל הסיגריות
-  const avg = total / divisor;
-
-  const minutes = Math.floor(avg / 60000) % 60;
-  const hours = Math.floor(avg / (1000 * 60 * 60));
-  return `${hours} שעות ${minutes} דק׳`;
-}
-
-// עדכון אוטומטי כל 5 שניות
-setInterval(() => {
-  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
-}, 5000);
-
-function renderStats() {
-  document.getElementById("tasksCount").textContent = data.tasksDone;
-  document.getElementById("smokesCount").textContent = data.smokes.length;
-  document.getElementById("bestRecord").textContent = data.bestRecord;
-  document.getElementById("avgTime").textContent = calcAvgSmokeTime();
-  document.getElementById("totalTasks").textContent = data.totalTasksDone;
-}
-
-// ---------------- מאזינים ----------------
-document.getElementById("drawBtn").addEventListener("click", drawTask);
-document.getElementById("smokedBtn").addEventListener("click", smoked);
-
-  // ---------- מסטיק ----------
-function takeGum() {
-  data.tasksDone++;
-  data.totalTasksDone++;
-  data.tasksBeforeCurrentSmoke++;
-  saveData();
-  alert("לקחת מסטיק ✅ נספר כמשימה!");
-}
-
-// ---------- טיימר 15 דקות ----------
-let timerInterval = null;
-
-function start15MinTimer() {
-  const endTime = Date.now() + (15 * 60 * 1000);
-  localStorage.setItem("timerEnd", endTime);
-
-  data.tasksDone++;
-  data.totalTasksDone++;
-  data.tasksBeforeCurrentSmoke++;
-  saveData();
-
-  showTimer();
-}
-
-function showTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-
-  const timerDisplay = document.getElementById("timerDisplay");
-  timerDisplay.hidden = false;
-
-  timerInterval = setInterval(() => {
-    const endTime = parseInt(localStorage.getItem("timerEnd"));
-    if (!endTime) {
-      timerDisplay.textContent = "⏱️ אין טיימר פעיל";
-      clearInterval(timerInterval);
-      return;
-    }
-
-    let remaining = Math.floor((endTime - Date.now()) / 1000);
-
-    // 👇 כאן נכנס הקטע החדש
-    if (!endTime || remaining <= 0) {
-      timerDisplay.textContent = "⏰ נגמר!";
-      localStorage.removeItem("timerEnd");
-      clearInterval(timerInterval);
-      return;
-    }
-
-    let minutes = Math.floor(remaining / 60);
-    let seconds = remaining % 60;
-    timerDisplay.textContent =
-      "⏱️ נשאר: " + String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
-  }, 1000);
-}
-
-// ---------- מאזינים חדשים ----------
-document.getElementById("gumBtn").addEventListener("click", takeGum);
-document.getElementById("timerBtn").addEventListener("click", start15MinTimer);
-
-// ---------- חידוש טיימר אם נשאר מהפעלה קודמת ----------
-if (localStorage.getItem("timerEnd")) {
-  showTimer();
-}
-// ---------------- הפעלה ראשונית ----------------
-renderStats();
+  renderWeek();
 </script>
 </body>
 </html>
