@@ -14,13 +14,19 @@
   }
   h1 { margin-bottom: 10px; }
   #counter {
-    font-size: 48px;
-    margin: 20px;
+    font-size: 40px;
+    margin: 10px;
     color: #1e40af;
   }
   #rank {
-    font-size: 32px;
+    font-size: 28px;
     color: #2563eb;
+    margin-bottom: 5px;
+  }
+  #total {
+    font-size: 24px;
+    color: #374151;
+    margin-top: 10px;
   }
   button {
     font-size: 20px;
@@ -44,8 +50,9 @@
 <body>
   <h1>🏆 מונה נצחונות בשחמט</h1>
 
-  <div id="counter">0 נצחונות</div>
+  <div id="counter">0 נצחונות רצופים</div>
   <div id="rank">דרגה: 1</div>
+  <div id="total">סה״כ משחקים: 0</div>
 
   <button id="winBtn">ניצחון ✅</button>
   <button id="loseBtn">הפסד ❌</button>
@@ -55,21 +62,25 @@
   let wins = parseInt(localStorage.getItem("wins")) || 0;
   let streak = parseInt(localStorage.getItem("streak")) || 0;
   let rank = parseInt(localStorage.getItem("rank")) || 1;
+  let total = parseInt(localStorage.getItem("total")) || 0;
 
   function updateDisplay() {
     document.getElementById("counter").textContent = `${streak} נצחונות רצופים`;
     document.getElementById("rank").textContent = `דרגה: ${rank}`;
+    document.getElementById("total").textContent = `סה״כ משחקים: ${total}`;
   }
 
   function save() {
     localStorage.setItem("wins", wins);
     localStorage.setItem("streak", streak);
     localStorage.setItem("rank", rank);
+    localStorage.setItem("total", total);
   }
 
   document.getElementById("winBtn").onclick = () => {
     wins++;
     streak++;
+    total++;
     if (streak % 10 === 0) {
       rank++;
       alert("🎉 עלית דרגה! עכשיו אתה בדרגה " + rank);
@@ -79,7 +90,8 @@
   };
 
   document.getElementById("loseBtn").onclick = () => {
-    alert("❌ הפסדת! הסדרה הרצופה מתאפסת.");
+    total++;
+    alert("❌ הפסדת! הרצף מתאפס.");
     streak = 0;
     save();
     updateDisplay();
@@ -90,6 +102,7 @@
       wins = 0;
       streak = 0;
       rank = 1;
+      total = 0;
       save();
       updateDisplay();
     }
