@@ -3,112 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מונה נצחונות בשחמט</title>
+<title>מונה סיגריות + טיימר</title>
 <style>
   body {
     font-family: "Heebo", sans-serif;
+    background: linear-gradient(135deg, #e0eaff, #f6f7fb);
     text-align: center;
-    background: linear-gradient(135deg, #dbeafe, #f0f9ff);
-    margin: 0;
-    padding: 30px;
+    padding: 20px;
   }
-  h1 { margin-bottom: 10px; }
-  #counter {
-    font-size: 40px;
-    margin: 10px;
-    color: #1e40af;
-  }
-  #rank {
-    font-size: 28px;
-    color: #2563eb;
-    margin-bottom: 5px;
-  }
-  #total {
-    font-size: 24px;
-    color: #374151;
-    margin-top: 10px;
-  }
+  h1 { margin-bottom: 5px; }
   button {
-    font-size: 20px;
-    padding: 10px 25px;
+    padding: 10px 20px;
+    font-size: 18px;
     border: none;
-    border-radius: 10px;
-    margin: 10px;
-    cursor: pointer;
+    border-radius: 8px;
     background: #2563eb;
-    color: white;
-    transition: 0.2s;
+    color: #fff;
+    cursor: pointer;
+    margin: 10px;
   }
-  button:active {
-    background: #1e40af;
+  button:active { background: #1e40af; }
+  .day-list {
+    margin-top: 20px;
+    max-width: 400px;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-inline: auto;
+    box-shadow: 0 2px 10px #0001;
+    text-align: right;
   }
-  #reset {
-    background: #ef4444;
+  .day-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
+  }
+  .summary {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  #timer {
+    font-size: 48px;
+    margin-top: 20px;
+    color: #111;
   }
 </style>
 </head>
 <body>
-  <h1>🏆 מונה נצחונות בשחמט</h1>
+  <h1>⏳ טיימר לפי בחירה</h1>
+  <p>הכנס כמה דקות שתרצה:</p>
+  <input id="minutes" type="number" placeholder="לדוגמה: 60">
+  <div id="timer">00:00</div>
+  <button onclick="startTimer()">התחל</button>
+  <button onclick="resetTimer()">איפוס</button>
 
-  <div id="counter">0 נצחונות רצופים</div>
-  <div id="rank">דרגה: 1</div>
-  <div id="total">סה״כ משחקים: 0</div>
+  <script>
+  let countdown;
+  let time = 0;
 
-  <button id="winBtn">ניצחון ✅</button>
-  <button id="loseBtn">הפסד ❌</button>
-  <button id="reset">איפוס 🔄</button>
+  // --- טעינת טיימר קיים מה-localStorage ---
+  const savedEnd = localStorage.getItem("timerEnd");
+  if (savedEnd) {
+    const remaining = Math.floor((new Date(savedEnd) - new Date()) / 1000);
+    if (remaining > 0) {
+      time = remaining;
+      startCountdown();
+    } else {
+      localStorage.removeItem("timerEnd");
+    }
+  }
+
+  function startTimer() {
+    clearInterval(countdown);
+    const mins = parseInt(document.getElementById('minutes').value);
+    if (isNaN(mins) || mins <= 0) {
+      alert("אנא הכנס מספר דקות חיובי");
+      return;
+    }
+    time = mins * 60;
+    const endTime = new Date(Date.now() + time * 1000);
+    localStorage.setItem("timerEnd", endTime.toISOString());
+    startCountdown();
+  }
+
+  function startCountdown() {
+    countdown = setInterval(() => {
+      const remaining = Math.floor((new Date(localStorage.getItem("timerEnd")) - new Date()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(countdown);
+        localStorage.removeItem("timerEnd");
+        document.getElementById('timer').textContent = "⏰ נגמר הזמן!";
+        return;
+      }
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+      document.getElementById('timer').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(countdown);
+    localStorage.removeItem("timerEnd");
+    time = 0;
+    document.getElementById('timer').textContent = "00:00";
+    document.getElementById('minutes').value = "";
+  }
+  </script>
+
+  <h1>🚬 מונה סיגריות יומי</h1>
+  <h2 id="todayTitle"></h2>
+  <div>
+    <button id="addBtn">➕ הוסף סיגריה</button>
+  </div>
+  <p>היום עישנת: <span id="todayCount">0</span></p>
+  <div class="day-list" id="weekList"></div>
+  <div class="summary" id="weekSummary"></div>
 
 <script>
-  let wins = parseInt(localStorage.getItem("wins")) || 0;
-  let streak = parseInt(localStorage.getItem("streak")) || 0;
-  let rank = parseInt(localStorage.getItem("rank")) || 1;
-  let total = parseInt(localStorage.getItem("total")) || 0;
+  const addBtn = document.getElementById("addBtn");
+  const todayCount = document.getElementById("todayCount");
+  const weekList = document.getElementById("weekList");
+  const weekSummary = document.getElementById("weekSummary");
+  const todayTitle = document.getElementById("todayTitle");
 
-  function updateDisplay() {
-    document.getElementById("counter").textContent = `${streak} נצחונות רצופים`;
-    document.getElementById("rank").textContent = `דרגה: ${rank}`;
-    document.getElementById("total").textContent = `סה״כ משחקים: ${total}`;
+  // תאריך היום
+  const today = new Date().toISOString().split("T")[0];
+  todayTitle.textContent = "תאריך: " + today.split("-").reverse().join("/");
+
+  // טעינת נתונים קודמים
+  let weekData = JSON.parse(localStorage.getItem("weekData") || "{}");
+
+  // אם זה יום חדש – אפס ערך חדש ליום הנוכחי
+  if (!weekData[today]) {
+    weekData[today] = 0;
+    localStorage.setItem("weekData", JSON.stringify(weekData));
   }
 
-  function save() {
-    localStorage.setItem("wins", wins);
-    localStorage.setItem("streak", streak);
-    localStorage.setItem("rank", rank);
-    localStorage.setItem("total", total);
+  // הצגת כמות היום
+  todayCount.textContent = weekData[today];
+
+  // הוספת סיגריה
+  addBtn.onclick = () => {
+    weekData[today]++;
+    localStorage.setItem("weekData", JSON.stringify(weekData));
+    todayCount.textContent = weekData[today];
+    renderWeek();
+  };
+
+  // הצגת רשימת כל הימים
+  function renderWeek() {
+    weekList.innerHTML = "";
+    const days = Object.keys(weekData).sort();
+    let total = 0;
+    days.forEach(d => {
+      total += weekData[d];
+      const div = document.createElement("div");
+      div.className = "day-item";
+      div.innerHTML = `<span>${d.split("-").reverse().join("/")}</span><span>${weekData[d]} 🚬</span>`;
+      weekList.appendChild(div);
+    });
+    weekSummary.textContent = "סה\"כ עד היום: " + total + " סיגריות";
   }
 
-  document.getElementById("winBtn").onclick = () => {
-    wins++;
-    streak++;
-    total++;
-    if (streak % 10 === 0) {
-      rank++;
-      alert("🎉 עלית דרגה! עכשיו אתה בדרגה " + rank);
-    }
-    save();
-    updateDisplay();
-  };
-
-  document.getElementById("loseBtn").onclick = () => {
-    total++;
-    alert("❌ הפסדת! הרצף מתאפס.");
-    streak = 0;
-    save();
-    updateDisplay();
-  };
-
-  document.getElementById("reset").onclick = () => {
-    if (confirm("לאפס הכל?")) {
-      wins = 0;
-      streak = 0;
-      rank = 1;
-      total = 0;
-      save();
-      updateDisplay();
-    }
-  };
-
-  updateDisplay();
+  renderWeek();
 </script>
 </body>
 </html>
