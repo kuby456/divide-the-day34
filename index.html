@@ -114,6 +114,7 @@ let timeLeft = 0;
 let lastDate = localStorage.getItem("lastDate");
 const today = new Date().toLocaleDateString("he-IL");
 
+// בדיקה אם עבר יום חדש
 if (lastDate !== today) {
   localStorage.setItem("mineCount", 0);
   localStorage.setItem("othersCount", 0);
@@ -121,20 +122,47 @@ if (lastDate !== today) {
   addToHistory();
 }
 
+// הצגת הערכים מהאחסון
 document.getElementById("mineCount").textContent = localStorage.getItem("mineCount") || 0;
 document.getElementById("othersCount").textContent = localStorage.getItem("othersCount") || 0;
+
+// ✅ טעינת טיימר מהאחסון אם רץ קודם
+if (localStorage.getItem("timerRunning") === "true") {
+  timeLeft = parseInt(localStorage.getItem("timeLeft") || 0);
+  if (timeLeft > 0) {
+    updateDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        localStorage.removeItem("timerRunning");
+        localStorage.removeItem("timeLeft");
+        alert("הטיימר הסתיים!");
+      }
+    }, 1000);
+  }
+}
 
 function startTimer() {
   const minutes = parseInt(document.getElementById("minutesInput").value);
   if (!minutes) return alert("הכנס זמן בדקות");
+
   clearInterval(timerInterval);
   timeLeft = minutes * 60;
+
+  // שמירה בלוקל סטורג'
+  localStorage.setItem("timeLeft", timeLeft);
+  localStorage.setItem("timerRunning", "true");
+
   updateDisplay();
   timerInterval = setInterval(() => {
     timeLeft--;
     updateDisplay();
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
+      localStorage.removeItem("timerRunning");
+      localStorage.removeItem("timeLeft");
       alert("הטיימר הסתיים!");
     }
   }, 1000);
@@ -143,6 +171,8 @@ function startTimer() {
 function resetTimer() {
   clearInterval(timerInterval);
   document.getElementById("timerDisplay").textContent = "00:00";
+  localStorage.removeItem("timeLeft");
+  localStorage.removeItem("timerRunning");
 }
 
 function updateDisplay() {
@@ -150,8 +180,10 @@ function updateDisplay() {
   const sec = timeLeft % 60;
   document.getElementById("timerDisplay").textContent =
     `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  localStorage.setItem("timeLeft", timeLeft); // ⏱️ שמירה כל שנייה
 }
 
+// מונים
 function addMine() {
   let count = parseInt(localStorage.getItem("mineCount") || 0);
   count++;
@@ -166,6 +198,7 @@ function addOthers() {
   document.getElementById("othersCount").textContent = count;
 }
 
+// הוספת יום חדש להיסטוריה
 function addToHistory() {
   let history = JSON.parse(localStorage.getItem("history") || "[]");
   if (localStorage.getItem("mineCount") !== null) {
@@ -178,6 +211,7 @@ function addToHistory() {
   }
 }
 
+// טעינת היסטוריה
 function loadHistory() {
   const list = document.getElementById("historyList");
   list.innerHTML = "<h3>היסטוריה יומית</h3>";
