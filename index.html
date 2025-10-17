@@ -126,21 +126,18 @@ if (lastDate !== today) {
 document.getElementById("mineCount").textContent = localStorage.getItem("mineCount") || 0;
 document.getElementById("othersCount").textContent = localStorage.getItem("othersCount") || 0;
 
-// ✅ טעינת טיימר מהאחסון אם רץ קודם
-if (localStorage.getItem("timerRunning") === "true") {
-  timeLeft = parseInt(localStorage.getItem("timeLeft") || 0);
-  if (timeLeft > 0) {
-    updateDisplay();
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      updateDisplay();
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        localStorage.removeItem("timerRunning");
-        localStorage.removeItem("timeLeft");
-        alert("הטיימר הסתיים!");
-      }
-    }, 1000);
+// 🕒 אם יש טיימר פעיל — נטען אותו לפי שעת הסיום
+const endTime = localStorage.getItem("endTime");
+if (endTime) {
+  const now = Date.now();
+  const diff = Math.floor((new Date(endTime) - now) / 1000);
+  if (diff > 0) {
+    timeLeft = diff;
+    startCountdown();
+  } else {
+    // אם הזמן עבר - ננקה
+    clearTimerStorage();
+    updateDisplay(0);
   }
 }
 
@@ -150,37 +147,45 @@ function startTimer() {
 
   clearInterval(timerInterval);
   timeLeft = minutes * 60;
+  const end = new Date(Date.now() + timeLeft * 1000);
+  localStorage.setItem("endTime", end.toISOString());
 
-  // שמירה בלוקל סטורג'
-  localStorage.setItem("timeLeft", timeLeft);
-  localStorage.setItem("timerRunning", "true");
+  updateDisplay(timeLeft);
+  startCountdown();
+}
 
-  updateDisplay();
+function startCountdown() {
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    timeLeft--;
-    updateDisplay();
-    if (timeLeft <= 0) {
+    const end = new Date(localStorage.getItem("endTime"));
+    const diff = Math.floor((end - Date.now()) / 1000);
+    if (diff <= 0) {
       clearInterval(timerInterval);
-      localStorage.removeItem("timerRunning");
-      localStorage.removeItem("timeLeft");
+      clearTimerStorage();
+      updateDisplay(0);
       alert("הטיימר הסתיים!");
+    } else {
+      timeLeft = diff;
+      updateDisplay(timeLeft);
     }
   }, 1000);
 }
 
 function resetTimer() {
   clearInterval(timerInterval);
-  document.getElementById("timerDisplay").textContent = "00:00";
-  localStorage.removeItem("timeLeft");
-  localStorage.removeItem("timerRunning");
+  clearTimerStorage();
+  updateDisplay(0);
 }
 
-function updateDisplay() {
-  const min = Math.floor(timeLeft / 60);
-  const sec = timeLeft % 60;
+function clearTimerStorage() {
+  localStorage.removeItem("endTime");
+}
+
+function updateDisplay(seconds) {
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
   document.getElementById("timerDisplay").textContent =
     `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-  localStorage.setItem("timeLeft", timeLeft); // ⏱️ שמירה כל שנייה
 }
 
 // מונים
