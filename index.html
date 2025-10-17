@@ -1,3 +1,114 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>טיימר ומונה יומי</title>
+<style>
+  body {
+    font-family: "Heebo", sans-serif;
+    background: linear-gradient(135deg, #e0eaff, #f6f7fb);
+    text-align: center;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    color:#1e3a8a;
+  }
+
+  input, button {
+    font-size: 18px;
+    margin: 5px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+
+  button {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+
+  button:active {
+    background: #1e40af;
+  }
+
+  /* טיימר */
+  #timerDisplay {
+    font-size: 46px;     /* גודל גדול וברור יותר */
+    font-weight: bold;
+    margin-top: 15px;
+    color: #1e3a8a;
+  }
+
+  /* מונים */
+  .counter {
+    margin-top: 30px;
+  }
+
+  .counter h3 {
+    font-size: 26px;
+    margin-bottom: 10px;
+    color: #1e3a8a;
+  }
+
+  .counter p {
+    font-size: 32px;     /* מגדיל את הטקסט והמספרים */
+    font-weight: bold;
+    color: #1e3a8a;
+    margin: 6px 0;
+  }
+
+  /* רשימת היסטוריה */
+  .list {
+    margin-top: 40px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 8px #0001;
+    padding: 15px;
+    max-width: 400px;
+    margin-inline: auto;
+    color: #1e3a8a;
+  }
+
+  .entry {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    font-size: 26px;
+  }
+</style>
+</head>
+<body>
+
+<h1>טיימר ומונה יומי</h1>
+
+<!-- טיימר -->
+<div>
+  <input type="number" id="minutesInput" placeholder="דקות" min="1">
+  <button onclick="startTimer()">הפעל טיימר</button>
+  <button onclick="resetTimer()">איפוס טיימר</button>
+  <div id="timerDisplay">00:00</div>
+</div>
+
+<!-- מונים -->
+<div class="counter">
+  <h3>מונה סיגריות יומי</h3>
+  <div>
+    <button onclick="addMine()">🚬 שלי</button>
+    <button onclick="addOthers()">🤝 מאחרים</button>
+  </div>
+  <p>שלי: <span id="mineCount">0</span></p>
+  <p>מאחרים: <span id="othersCount">0</span></p>
+</div>
+
+<!-- רשימת ימים -->
+<div class="list" id="historyList"></div>
+
+<script>
 let timerInterval;
 let timeLeft = 0;
 const today = new Date().toLocaleDateString("he-IL");
@@ -113,3 +224,7 @@ function loadHistory() {
   });
 }
 loadHistory();
+</script>
+
+</body>
+</html>
