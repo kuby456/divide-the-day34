@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מונה סיגריות + טיימר</title>
+<title>טיימר ומונה יומי</title>
 <style>
   body {
     font-family: "Heebo", sans-serif;
@@ -11,165 +11,186 @@
     text-align: center;
     padding: 20px;
   }
-  h1 { margin-bottom: 5px; }
-  button {
-    padding: 10px 20px;
+
+  h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    color:#1e3a8a;
+  }
+
+  input, button {
     font-size: 18px;
-    border: none;
+    margin: 5px;
+    padding: 8px 12px;
     border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+
+  button {
     background: #2563eb;
     color: #fff;
+    border: none;
     cursor: pointer;
-    margin: 10px;
   }
-  button:active { background: #1e40af; }
-  .day-list {
-    margin-top: 20px;
-    max-width: 400px;
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    margin-inline: auto;
-    box-shadow: 0 2px 10px #0001;
-    text-align: right;
+
+  button:active {
+    background: #1e40af;
   }
-  .day-item {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #ddd;
-    padding: 5px 0;
-  }
-  .summary {
-    margin-top: 15px;
-    font-size: 18px;
+
+  /* טיימר */
+  #timerDisplay {
+    font-size: 46px;     /* גודל גדול וברור יותר */
     font-weight: bold;
-    color: #333;
+    margin-top: 15px;
+    color: #1e3a8a;
   }
-  #timer {
-    font-size: 48px;
-    margin-top: 20px;
-    color: #111;
+
+  /* מונים */
+  .counter {
+    margin-top: 30px;
+  }
+
+  .counter h3 {
+    font-size: 26px;
+    margin-bottom: 10px;
+    color: #1e3a8a;
+  }
+
+  .counter p {
+    font-size: 32px;     /* מגדיל את הטקסט והמספרים */
+    font-weight: bold;
+    color: #1e3a8a;
+    margin: 6px 0;
+  }
+
+  /* רשימת היסטוריה */
+  .list {
+    margin-top: 40px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 8px #0001;
+    padding: 15px;
+    max-width: 400px;
+    margin-inline: auto;
+    color: #1e3a8a;
+  }
+
+  .entry {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    font-size: 26px;
   }
 </style>
 </head>
 <body>
-  <h1>⏳ טיימר לפי בחירה</h1>
-  <p>הכנס כמה דקות שתרצה:</p>
-  <input id="minutes" type="number" placeholder="לדוגמה: 60">
-  <div id="timer">00:00</div>
-  <button onclick="startTimer()">התחל</button>
-  <button onclick="resetTimer()">איפוס</button>
 
-  <script>
-  let countdown;
-  let time = 0;
+<h1>טיימר ומונה יומי</h1>
 
-  // --- טעינת טיימר קיים מה-localStorage ---
-  const savedEnd = localStorage.getItem("timerEnd");
-  if (savedEnd) {
-    const remaining = Math.floor((new Date(savedEnd) - new Date()) / 1000);
-    if (remaining > 0) {
-      time = remaining;
-      startCountdown();
-    } else {
-      localStorage.removeItem("timerEnd");
-    }
-  }
+<!-- טיימר -->
+<div>
+  <input type="number" id="minutesInput" placeholder="דקות" min="1">
+  <button onclick="startTimer()">הפעל טיימר</button>
+  <button onclick="resetTimer()">איפוס טיימר</button>
+  <div id="timerDisplay">00:00</div>
+</div>
 
-  function startTimer() {
-    clearInterval(countdown);
-    const mins = parseInt(document.getElementById('minutes').value);
-    if (isNaN(mins) || mins <= 0) {
-      alert("אנא הכנס מספר דקות חיובי");
-      return;
-    }
-    time = mins * 60;
-    const endTime = new Date(Date.now() + time * 1000);
-    localStorage.setItem("timerEnd", endTime.toISOString());
-    startCountdown();
-  }
-
-  function startCountdown() {
-    countdown = setInterval(() => {
-      const remaining = Math.floor((new Date(localStorage.getItem("timerEnd")) - new Date()) / 1000);
-      if (remaining <= 0) {
-        clearInterval(countdown);
-        localStorage.removeItem("timerEnd");
-        document.getElementById('timer').textContent = "⏰ נגמר הזמן!";
-        return;
-      }
-      const minutes = Math.floor(remaining / 60);
-      const seconds = remaining % 60;
-      document.getElementById('timer').textContent =
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }, 1000);
-  }
-
-  function resetTimer() {
-    clearInterval(countdown);
-    localStorage.removeItem("timerEnd");
-    time = 0;
-    document.getElementById('timer').textContent = "00:00";
-    document.getElementById('minutes').value = "";
-  }
-  </script>
-
-  <h1>🚬 מונה סיגריות יומי</h1>
-  <h2 id="todayTitle"></h2>
+<!-- מונים -->
+<div class="counter">
+  <h3>מונה סיגריות יומי</h3>
   <div>
-    <button id="addBtn">➕ הוסף סיגריה</button>
+    <button onclick="addMine()">🚬 שלי</button>
+    <button onclick="addOthers()">🤝 מאחרים</button>
   </div>
-  <p>היום עישנת: <span id="todayCount">0</span></p>
-  <div class="day-list" id="weekList"></div>
-  <div class="summary" id="weekSummary"></div>
+  <p>שלי: <span id="mineCount">0</span></p>
+  <p>מאחרים: <span id="othersCount">0</span></p>
+</div>
+
+<!-- רשימת ימים -->
+<div class="list" id="historyList"></div>
 
 <script>
-  const addBtn = document.getElementById("addBtn");
-  const todayCount = document.getElementById("todayCount");
-  const weekList = document.getElementById("weekList");
-  const weekSummary = document.getElementById("weekSummary");
-  const todayTitle = document.getElementById("todayTitle");
+let timerInterval;
+let timeLeft = 0;
+let lastDate = localStorage.getItem("lastDate");
+const today = new Date().toLocaleDateString("he-IL");
 
-  // תאריך היום
-  const today = new Date().toISOString().split("T")[0];
-  todayTitle.textContent = "תאריך: " + today.split("-").reverse().join("/");
+if (lastDate !== today) {
+  localStorage.setItem("mineCount", 0);
+  localStorage.setItem("othersCount", 0);
+  localStorage.setItem("lastDate", today);
+  addToHistory();
+}
 
-  // טעינת נתונים קודמים
-  let weekData = JSON.parse(localStorage.getItem("weekData") || "{}");
+document.getElementById("mineCount").textContent = localStorage.getItem("mineCount") || 0;
+document.getElementById("othersCount").textContent = localStorage.getItem("othersCount") || 0;
 
-  // אם זה יום חדש – אפס ערך חדש ליום הנוכחי
-  if (!weekData[today]) {
-    weekData[today] = 0;
-    localStorage.setItem("weekData", JSON.stringify(weekData));
-  }
+function startTimer() {
+  const minutes = parseInt(document.getElementById("minutesInput").value);
+  if (!minutes) return alert("הכנס זמן בדקות");
+  clearInterval(timerInterval);
+  timeLeft = minutes * 60;
+  updateDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      alert("הטיימר הסתיים!");
+    }
+  }, 1000);
+}
 
-  // הצגת כמות היום
-  todayCount.textContent = weekData[today];
+function resetTimer() {
+  clearInterval(timerInterval);
+  document.getElementById("timerDisplay").textContent = "00:00";
+}
 
-  // הוספת סיגריה
-  addBtn.onclick = () => {
-    weekData[today]++;
-    localStorage.setItem("weekData", JSON.stringify(weekData));
-    todayCount.textContent = weekData[today];
-    renderWeek();
-  };
+function updateDisplay() {
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+  document.getElementById("timerDisplay").textContent =
+    `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
 
-  // הצגת רשימת כל הימים
-  function renderWeek() {
-    weekList.innerHTML = "";
-    const days = Object.keys(weekData).sort();
-    let total = 0;
-    days.forEach(d => {
-      total += weekData[d];
-      const div = document.createElement("div");
-      div.className = "day-item";
-      div.innerHTML = `<span>${d.split("-").reverse().join("/")}</span><span>${weekData[d]} 🚬</span>`;
-      weekList.appendChild(div);
+function addMine() {
+  let count = parseInt(localStorage.getItem("mineCount") || 0);
+  count++;
+  localStorage.setItem("mineCount", count);
+  document.getElementById("mineCount").textContent = count;
+}
+
+function addOthers() {
+  let count = parseInt(localStorage.getItem("othersCount") || 0);
+  count++;
+  localStorage.setItem("othersCount", count);
+  document.getElementById("othersCount").textContent = count;
+}
+
+function addToHistory() {
+  let history = JSON.parse(localStorage.getItem("history") || "[]");
+  if (localStorage.getItem("mineCount") !== null) {
+    history.push({
+      date: today,
+      mine: localStorage.getItem("mineCount"),
+      others: localStorage.getItem("othersCount")
     });
-    weekSummary.textContent = "סה\"כ עד היום: " + total + " סיגריות";
+    localStorage.setItem("history", JSON.stringify(history));
   }
+}
 
-  renderWeek();
+function loadHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = "<h3>היסטוריה יומית</h3>";
+  let history = JSON.parse(localStorage.getItem("history") || "[]");
+  history.reverse().forEach(entry => {
+    list.innerHTML += `<div class="entry">
+      <b>${entry.date}</b><br>
+      שלי: ${entry.mine}, מאחרים: ${entry.others}
+    </div>`;
+  });
+}
+loadHistory();
 </script>
+
 </body>
 </html>
