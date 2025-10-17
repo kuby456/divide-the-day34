@@ -4,6 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>טיימר ומונה יומי</title>
+  <style>
+  h1 {
+    color: #1e3a8a;
+  }
+  input, button {
+    font-size: 18px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin: 5px;
+  }
+  button {
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #1e40af;
+  }
+  table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 250px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px #0002;
+  }
+  th, td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  th {
+    background: #f1f5f9;
+    color: #1e3a8a;
+  }
+</style>
 <style>
   body {
     font-family: "Heebo", sans-serif;
@@ -93,7 +129,13 @@
   <button onclick="resetTimer()">איפוס טיימר</button>
   <div id="timerDisplay">00:00</div>
 </div>
+<h1>מחשבון אחוזי שכטות</h1>
 
+<label>כמה שכטות יש בסיגריה?</label><br>
+<input type="number" id="puffsInput" placeholder="לדוגמה 12"><br>
+<button onclick="calculate()">חשב</button>
+
+<div id="result"></div>
 <!-- מונים -->
 <div class="counter">
   <h3>מונה סיגריות יומי</h3>
@@ -225,6 +267,28 @@ function loadHistory() {
 }
 loadHistory();
 </script>
+<script>
+function calculate() {
+  const puffs = parseInt(document.getElementById("puffsInput").value);
+  if (!puffs || puffs <= 0) {
+    document.getElementById("result").innerHTML = "<p>אנא הזן מספר תקין של שכטות.</p>";
+    return;
+  }
 
+  let table = "<table><tr><th>שכטה</th><th>אחוז מהסיגריה</th></tr>";
+  for (let i = 1; i <= puffs; i++) {
+    const percent = ((i / puffs) * 100).toFixed(1);
+    table += `<tr><td>${i}</td><td>${percent}%</td></tr>`;
+  }
+  table += "</table>";
+
+  document.getElementById("result").innerHTML = table;
+}
+</script>
+  
 </body>
 </html>
+  
+ 
+
+
