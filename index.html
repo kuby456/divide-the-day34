@@ -1,9 +1,49 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+  <meta charset="UTF-8">
+  <title>רשימת סיגריות</title>
+ 
+</body>
+</html>
+
+ 
+</head>
+<body>
+
+  
+  <!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>טיימר ומונה יומי</title>
+  <style>
+    body {
+      font-family: "Heebo", sans-serif;
+      background: linear-gradient(to bottom right, #e0eaff, #f6f7fb);
+      text-align: right;
+      padding: 30px;
+      color: #1e3a8a;
+    }
+    h1 {
+      text-align: center;
+      color: #2563eb;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    li {
+      background: white;
+      margin: 10px 0;
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-size: 18px;
+    }
+  </style>
   <style>
   h1 {
     color: #1e3a8a;
@@ -129,6 +169,15 @@
   <button onclick="resetTimer()">איפוס טיימר</button>
   <div id="timerDisplay">00:00</div>
 </div>
+  <h1>רשימת שכטות</h1>
+
+  <ul>
+    <li>קפיטל — 24 שכטות</li>
+    <li>ערביה — 25 שכטות</li>
+    <li>נקסט אוריגינל וופיין — 12 שכטות</li>
+    <li>מלבורו טאץ — 10 שכטות</li>
+  </ul>
+  
 <h1>מחשבון אחוזי שכטות</h1>
 
 <label>כמה שכטות יש בסיגריה?</label><br>
@@ -236,59 +285,4 @@ function addMine() {
   count++;
   localStorage.setItem("mineCount", count);
   document.getElementById("mineCount").textContent = count;
-}
-
-function addOthers() {
-  let count = parseInt(localStorage.getItem("othersCount") || 0);
-  count++;
-  localStorage.setItem("othersCount", count);
-  document.getElementById("othersCount").textContent = count;
-}
-
-// 🔹 היסטוריה
-function addToHistory() {
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-  const mine = localStorage.getItem("mineCount") || 0;
-  const others = localStorage.getItem("othersCount") || 0;
-  history.push({ date: today, mine, others });
-  localStorage.setItem("history", JSON.stringify(history));
-}
-
-function loadHistory() {
-  const list = document.getElementById("historyList");
-  list.innerHTML = "<h3>היסטוריה יומית</h3>";
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-  history.reverse().forEach(entry => {
-    list.innerHTML += `<div class="entry">
-      <b>${entry.date}</b><br>
-      שלי: ${entry.mine}, מאחרים: ${entry.others}
-    </div>`;
-  });
-}
-loadHistory();
-</script>
-<script>
-function calculate() {
-  const puffs = parseInt(document.getElementById("puffsInput").value);
-  if (!puffs || puffs <= 0) {
-    document.getElementById("result").innerHTML = "<p>אנא הזן מספר תקין של שכטות.</p>";
-    return;
-  }
-
-  let table = "<table><tr><th>שכטה</th><th>אחוז מהסיגריה</th></tr>";
-  for (let i = 1; i <= puffs; i++) {
-    const percent = ((i / puffs) * 100).toFixed(1);
-    table += `<tr><td>${i}</td><td>${percent}%</td></tr>`;
-  }
-  table += "</table>";
-
-  document.getElementById("result").innerHTML = table;
-}
-</script>
-  
-</body>
-</html>
-  
- 
-
 
