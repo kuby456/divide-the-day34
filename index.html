@@ -285,9 +285,8 @@
       }
 
       const smoked = total - missed;
-      const percent = (smoked / total) * 100;
-      const part = smoked / total;
-
+const percent = (missed / total) * 100; // אחוז הפארשים (לא עישנת)
+const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת בפועל
       if (!data[today]) data[today] = [];
       data[today].unshift({ total, missed, percent, part });
 
