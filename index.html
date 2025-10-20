@@ -322,15 +322,16 @@
         `;
 
         dayCigs.forEach((c, i) => {
-          html += `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${c.total}</td>
-              <td>${c.missed}</td>
-              <td>${c.percent.toFixed(0)}%</td>
-              <td>${c.part.toFixed(2)}</td>
-            </tr>`;
-        });
+  const reversedIndex = dayCigs.length - i; // הופך את הסדר
+  html += `
+    <tr>
+      <td>${reversedIndex}</td>
+      <td>${c.total}</td>
+      <td>${c.missed}</td>
+      <td>${c.percent.toFixed(0)}%</td>
+      <td>${c.part.toFixed(2)}</td>
+    </tr>`;
+});
 
         html += `
             </table>
