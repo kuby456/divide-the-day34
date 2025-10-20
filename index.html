@@ -14,6 +14,43 @@
       margin: 0;
     }
 
+    /* 🕒 עיצוב טיימר */
+    #timerDisplay {
+      font-size: 48px;
+      font-weight: bold;
+      margin-top: 15px;
+      color: #1e3a8a;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+
+    #timerControls {
+      margin-top: 10px;
+    }
+
+    #timerControls input {
+      width: 90px;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    #timerControls button {
+      background-color: #2563eb;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    #timerControls button:hover {
+      background-color: #1e3a8a;
+    }
+
     h1 {
       color: #2563eb;
       margin-bottom: 25px;
@@ -41,7 +78,7 @@
       font-size: 17px;
       cursor: pointer;
       margin-top: 10px;
-      width: 100%;
+      width: 30%;
       max-width: 320px;
     }
 
@@ -95,6 +132,9 @@
     }
 
     @media (max-width: 480px) {
+      #timerDisplay {
+        font-size: 36px;
+      }
       input {
         width: 45%;
         font-size: 16px;
@@ -111,67 +151,129 @@
       }
     }
   </style>
-    <style>
-    body {
-      font-family: "Heebo", sans-serif;
-      background: linear-gradient(to bottom right, #e0eaff, #f6f7fb);
-      text-align: right;
-      padding: 30px;
-      color: #1e3a8a;
-    }
-    h1 {
-      text-align: center;
-      color: #2563eb;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-    li {
-      background: white;
-      margin: 10px 0;
-      padding: 12px 18px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      font-size: 18px;
-    }
-  </style>
 </head>
 
 <body>
-<ul>
+
+  <!-- 🕒 טיימר למעלה -->
+  <div id="timerSection">
+    <div id="timerDisplay">00:00:00</div>
+    <div id="timerControls">
+      <input type="number" id="timerMinutes" placeholder="דקות">
+      <br>
+      <button onclick="startTimer()">התחל</button>
+      <button onclick="resetTimer()">איפוס</button>
+    </div>
+  </div>
+
+ <!-- 📦 רשימת מותגים -->
+<div class="brand-list">
+  <h2>מספר שכטות בכל סיגריה</h2>
+  <ul>
     <li>קפיטל — 24 שכטות</li>
     <li>ערביה — 25 שכטות</li>
     <li>נקסט אוריגינל וופיין — 12 שכטות</li>
     <li>מלבורו טאץ — 10 שכטות</li>
   </ul>
+</div>
+
+<style>
+  .brand-list {
+    background: #ffffff;
+    border: 3px solid #2563eb;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 50, 0.1);
+    padding: 20px;
+    margin: 25px auto;
+    max-width: 400px;
+    text-align: right;
+    color: #1e3a8a;
+  }
+
+  .brand-list h2 {
+    margin-top: 0;
+    font-size: 20px;
+    text-align: center;
+    color: #1e40af;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 6px;
+    
+  }
+
+  .brand-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0 0 0;
+  }
+
+  .brand-list li {
+    background: #f0f4ff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-size: 17px;
+   font-weight: bold;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+  }
+
+  @media (max-width: 480px) {
+    .brand-list {
+      max-width: 90%;
+      padding: 15px;
+    }
+    .brand-list h2 {
+      font-size: 23px;
+    }
+    .brand-list li {
+      font-size: 20px;
+      padding: 9px 12px;
+    }
+  }
+</style>
+
   <h1>מחשבון שכטות יומי 🚬</h1>
 
   <div>
     <input type="number" id="totalPuffs" placeholder="שכטות בסיגריה">
     <input type="number" id="missedPuffs" placeholder="פארשים">
     <br>
-    <button onclick="addCigarette()">הוסף סיגריה</button>
+    <button onclick="addCigarette()" style="width: 50%;">הוסף סיגריה</button>
   </div>
 
   <div id="daysContainer"></div>
 
   <script>
+    /* -----------------------------
+       🕓 פונקציה לשיוך יום לפי 05:00
+    ----------------------------- */
+    function getCurrentDayKey() {
+      const now = new Date();
+      const cutoff = new Date();
+      cutoff.setHours(5, 0, 0, 0); // שעה 5:00
+
+      // אם השעה הנוכחית לפני 5 בבוקר – נחשב ליום הקודם
+      if (now < cutoff) {
+        now.setDate(now.getDate() - 1);
+      }
+      return now.toLocaleDateString("he-IL");
+    }
+
+    /* -----------------------------
+       🚬 שמירת נתוני עישון יומי
+    ----------------------------- */
     let data = {};
 
     window.onload = function() {
       const saved = localStorage.getItem("dailyCigs");
-      if (saved) {
-        data = JSON.parse(saved);
-      }
+      if (saved) data = JSON.parse(saved);
       renderAllDays();
+      loadTimer();
     };
 
     function addCigarette() {
       const total = parseFloat(document.getElementById("totalPuffs").value);
       const missed = parseFloat(document.getElementById("missedPuffs").value);
-      const today = new Date().toLocaleDateString("he-IL");
+      const today = getCurrentDayKey();
 
       if (isNaN(total) || total <= 0) {
         alert("תכתוב כמה שכטות יש בסיגריה!");
@@ -237,6 +339,70 @@
 
         container.innerHTML += html;
       });
+    }
+
+    /* -----------------------------
+       ⏱️ טיימר עם localStorage
+    ----------------------------- */
+    let timer;
+    let remainingSeconds = 0;
+
+    function startTimer() {
+      const minutesInput = document.getElementById("timerMinutes").value;
+      if (minutesInput && !isNaN(minutesInput)) {
+        remainingSeconds = parseInt(minutesInput) * 60;
+        saveTimer();
+      }
+
+      if (remainingSeconds <= 0) {
+        alert("תכתוב כמה דקות להפעיל את הטיימר!");
+        return;
+      }
+
+      if (timer) clearInterval(timer);
+
+      timer = setInterval(() => {
+        remainingSeconds--;
+        updateTimerDisplay();
+        saveTimer();
+        if (remainingSeconds <= 0) {
+          clearInterval(timer);
+          alert("⏰ הזמן נגמר!");
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      remainingSeconds = 0;
+      saveTimer();
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const hours = String(Math.floor(remainingSeconds / 3600)).padStart(2, "0");
+      const minutes = String(Math.floor((remainingSeconds % 3600) / 60)).padStart(2, "0");
+      const seconds = String(remainingSeconds % 60).padStart(2, "0");
+      document.getElementById("timerDisplay").textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    function saveTimer() {
+      localStorage.setItem("timerRemaining", remainingSeconds);
+    }
+
+    function loadTimer() {
+      const saved = localStorage.getItem("timerRemaining");
+      if (saved) {
+        remainingSeconds = parseInt(saved);
+        if (remainingSeconds > 0) {
+          updateTimerDisplay();
+          startTimer();
+        } else {
+          updateTimerDisplay();
+        }
+      } else {
+        updateTimerDisplay();
+      }
     }
   </script>
 
