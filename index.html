@@ -150,6 +150,44 @@
         max-width: 95%;
       }
     }
+
+    /* 🎯 עיצוב רשימת מותגים */
+    .brand-list {
+      background: #ffffff;
+      border: 3px solid #2563eb;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 50, 0.1);
+      padding: 20px;
+      margin: 25px auto;
+      max-width: 400px;
+      text-align: right;
+      color: #1e3a8a;
+    }
+
+    .brand-list h2 {
+      margin-top: 0;
+      font-size: 20px;
+      text-align: center;
+      color: #1e40af;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 6px;
+    }
+
+    .brand-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0 0 0;
+    }
+
+    .brand-list li {
+      background: #f0f4ff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 8px 0;
+      font-size: 17px;
+      font-weight: bold;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 
@@ -166,70 +204,16 @@
     </div>
   </div>
 
- <!-- 📦 רשימת מותגים -->
-<div class="brand-list">
-  <h2>מספר שכטות בכל סיגריה</h2>
-  <ul>
-    <li>קפיטל — 24 שכטות</li>
-    <li>ערביה — 25 שכטות</li>
-    <li>נקסט אוריגינל וופיין — 12 שכטות</li>
-    <li>מלבורו טאץ — 10 שכטות</li>
-  </ul>
-</div>
-
-<style>
-  .brand-list {
-    background: #ffffff;
-    border: 3px solid #2563eb;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 50, 0.1);
-    padding: 20px;
-    margin: 25px auto;
-    max-width: 400px;
-    text-align: right;
-    color: #1e3a8a;
-  }
-
-  .brand-list h2 {
-    margin-top: 0;
-    font-size: 20px;
-    text-align: center;
-    color: #1e40af;
-    border-bottom: 2px solid #2563eb;
-    padding-bottom: 6px;
-    
-  }
-
-  .brand-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 15px 0 0 0;
-  }
-
-  .brand-list li {
-    background: #f0f4ff;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin: 8px 0;
-    font-size: 17px;
-   font-weight: bold;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-  }
-
-  @media (max-width: 480px) {
-    .brand-list {
-      max-width: 90%;
-      padding: 15px;
-    }
-    .brand-list h2 {
-      font-size: 23px;
-    }
-    .brand-list li {
-      font-size: 20px;
-      padding: 9px 12px;
-    }
-  }
-</style>
+  <!-- 📦 רשימת מותגים -->
+  <div class="brand-list">
+    <h2>מספר שכטות בכל סיגריה</h2>
+    <ul>
+      <li>קפיטל — 24 שכטות</li>
+      <li>ערביה — 25 שכטות</li>
+      <li>נקסט אוריגינל וופיין — 12 שכטות</li>
+      <li>מלבורו טאץ — 10 שכטות</li>
+    </ul>
+  </div>
 
   <h1>מחשבון שכטות יומי 🚬</h1>
 
@@ -244,14 +228,14 @@
 
   <script>
     /* -----------------------------
-       🕓 פונקציה לשיוך יום לפי 05:00
+       🕓 פונקציה לשיוך יום לפי 03:00
     ----------------------------- */
     function getCurrentDayKey() {
       const now = new Date();
       const cutoff = new Date();
-      cutoff.setHours(5, 0, 0, 0); // שעה 5:00
+      cutoff.setHours(3, 0, 0, 0); // שעה 3:00 לפנות בוקר
 
-      // אם השעה הנוכחית לפני 5 בבוקר – נחשב ליום הקודם
+      // אם השעה לפני 3 בבוקר – נחשב ליום הקודם
       if (now < cutoff) {
         now.setDate(now.getDate() - 1);
       }
@@ -285,8 +269,9 @@
       }
 
       const smoked = total - missed;
-const percent = (missed / total) * 100; // אחוז הפארשים (לא עישנת)
-const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת בפועל
+      const percent = (missed / total) * 100;
+      const part = smoked / total;
+
       if (!data[today]) data[today] = [];
       data[today].unshift({ total, missed, percent, part });
 
@@ -321,16 +306,16 @@ const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת ב
         `;
 
         dayCigs.forEach((c, i) => {
-  const reversedIndex = dayCigs.length - i; // הופך את הסדר
-  html += `
-    <tr>
-      <td>${reversedIndex}</td>
-      <td>${c.total}</td>
-      <td>${c.missed}</td>
-      <td>${c.percent.toFixed(0)}%</td>
-      <td>${c.part.toFixed(2)}</td>
-    </tr>`;
-});
+          const reversedIndex = dayCigs.length - i;
+          html += `
+            <tr>
+              <td>${reversedIndex}</td>
+              <td>${c.total}</td>
+              <td>${c.missed}</td>
+              <td>${c.percent.toFixed(0)}%</td>
+              <td>${c.part.toFixed(2)}</td>
+            </tr>`;
+        });
 
         html += `
             </table>
@@ -339,6 +324,18 @@ const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת ב
 
         container.innerHTML += html;
       });
+
+      // ✨ רשימת סיכום יומית למטה
+      let summaryHtml = "<h3 style='margin-top:30px;'>📅 סיכום ימים</h3><ul style='list-style:none; padding:0;'>";
+      days.forEach(day => {
+        const dayCigs = data[day];
+        const totalPart = dayCigs.reduce((sum, c) => sum + c.part, 0);
+        summaryHtml += `<li style="margin:5px 0; background:#f0f4ff; border-radius:10px; padding:6px 10px;">
+          ${day}: ${totalPart.toFixed(2)} סיגריות
+        </li>`;
+      });
+      summaryHtml += "</ul>";
+      container.innerHTML += summaryHtml;
     }
 
     /* -----------------------------
@@ -349,6 +346,8 @@ const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת ב
 
     function startTimer() {
       const minutesInput = document.getElementById("timerMinutes").value;
+
+      // רק אם המשתמש הכניס ערך חדש
       if (minutesInput && !isNaN(minutesInput)) {
         remainingSeconds = parseInt(minutesInput) * 60;
         saveTimer();
@@ -365,8 +364,11 @@ const part = smoked / total; // נשאר אותו דבר - סה"כ עישנת ב
         remainingSeconds--;
         updateTimerDisplay();
         saveTimer();
+
         if (remainingSeconds <= 0) {
           clearInterval(timer);
+          remainingSeconds = 0;
+          updateTimerDisplay();
           alert("⏰ הזמן נגמר!");
         }
       }, 1000);
