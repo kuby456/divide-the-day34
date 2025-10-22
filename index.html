@@ -406,6 +406,51 @@
         updateTimerDisplay();
       }
     }
+    /* -----------------------------
+   🌙 בדיקה אוטומטית ב-03:00 לאיפוס יום
+----------------------------- */
+
+// נשמור את היום האחרון שהקוד רץ
+function getSavedDayKey() {
+  return localStorage.getItem("lastDayKey");
+}
+
+function saveCurrentDayKey() {
+  localStorage.setItem("lastDayKey", getCurrentDayKey());
+}
+
+// פונקציה שמריצה את הבדיקה אחת לדקה
+function checkForNewDay() {
+  const savedDay = getSavedDayKey();
+  const currentDay = getCurrentDayKey();
+
+  // אם היום השתנה → זה אומר שעברנו את 3 בלילה
+  if (savedDay && savedDay !== currentDay) {
+    console.log("יום חדש — מאפסים ספירה יומית");
+
+    // שומרים את הנתונים כמו שהם
+    localStorage.setItem("dailyCigs", JSON.stringify(data));
+
+    // מאפסים רק את הסיגריות של היום החדש
+    data = {};
+    data[currentDay] = [];
+
+    // מעדכנים בלוקל־סטורג׳
+    localStorage.setItem("dailyCigs", JSON.stringify(data));
+
+    // מציגים מחדש
+    renderAllDays();
+
+    // מעדכנים את היום החדש
+    saveCurrentDayKey();
+  }
+}
+
+// נריץ את הבדיקה כל דקה
+setInterval(checkForNewDay, 60 * 1000);
+
+// נוודא שבהתחלה נשמר היום הנוכחי
+window.addEventListener("load", saveCurrentDayKey);
   </script>
 
 </body>
