@@ -14,7 +14,6 @@
       margin: 0;
     }
 
-    /* 🕒 עיצוב טיימר */
     #timerDisplay {
       font-size: 48px;
       font-weight: bold;
@@ -132,26 +131,13 @@
     }
 
     @media (max-width: 480px) {
-      #timerDisplay {
-        font-size: 36px;
-      }
-      input {
-        width: 45%;
-        font-size: 16px;
-      }
-      button {
-        font-size: 16px;
-        padding: 10px 18px;
-      }
-      table {
-        font-size: 14px;
-      }
-      .day-block {
-        max-width: 95%;
-      }
+      #timerDisplay { font-size: 36px; }
+      input { width: 45%; font-size: 16px; }
+      button { font-size: 16px; padding: 10px 18px; }
+      table { font-size: 14px; }
+      .day-block { max-width: 95%; }
     }
 
-    /* 🎯 עיצוב רשימת מותגים */
     .brand-list {
       background: #ffffff;
       border: 3px solid #2563eb;
@@ -173,12 +159,6 @@
       padding-bottom: 6px;
     }
 
-    .brand-list ul {
-      list-style: none;
-      padding: 0;
-      margin: 15px 0 0 0;
-    }
-
     .brand-list li {
       background: #f0f4ff;
       border-radius: 10px;
@@ -187,13 +167,14 @@
       font-size: 17px;
       font-weight: bold;
       box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+      list-style: none;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- 🕒 טיימר למעלה -->
+  <!-- 🕒 טיימר -->
   <div id="timerSection">
     <div id="timerDisplay">00:00:00</div>
     <div id="timerControls">
@@ -227,26 +208,17 @@
   <div id="daysContainer"></div>
 
   <script>
-    /* -----------------------------
-       🕓 פונקציה לשיוך יום לפי 03:00
-    ----------------------------- */
+    /* 🕓 חלוקה לפי יום (מתחיל ב-03:00) */
     function getCurrentDayKey() {
       const now = new Date();
       const cutoff = new Date();
-      cutoff.setHours(3, 0, 0, 0); // שעה 3:00 לפנות בוקר
-
-      // אם השעה לפני 3 בבוקר – נחשב ליום הקודם
-      if (now < cutoff) {
-        now.setDate(now.getDate() - 1);
-      }
+      cutoff.setHours(3, 0, 0, 0);
+      if (now < cutoff) now.setDate(now.getDate() - 1);
       return now.toLocaleDateString("he-IL");
     }
 
-    /* -----------------------------
-       🚬 שמירת נתוני עישון יומי
-    ----------------------------- */
+    /* 🚬 שמירת נתונים יומיים */
     let data = {};
-
     window.onload = function() {
       const saved = localStorage.getItem("dailyCigs");
       if (saved) data = JSON.parse(saved);
@@ -259,14 +231,8 @@
       const missed = parseFloat(document.getElementById("missedPuffs").value);
       const today = getCurrentDayKey();
 
-      if (isNaN(total) || total <= 0) {
-        alert("תכתוב כמה שכטות יש בסיגריה!");
-        return;
-      }
-      if (isNaN(missed) || missed < 0) {
-        alert("תכתוב כמה שכטות לא עישנת (פארשים)!");
-        return;
-      }
+      if (isNaN(total) || total <= 0) return alert("תכתוב כמה שכטות יש בסיגריה!");
+      if (isNaN(missed) || missed < 0) return alert("תכתוב כמה שכטות לא עישנת (פארשים)!");
 
       const smoked = total - missed;
       const percent = (missed / total) * 100;
@@ -274,7 +240,6 @@
 
       if (!data[today]) data[today] = [];
       data[today].unshift({ total, missed, percent, part });
-
       localStorage.setItem("dailyCigs", JSON.stringify(data));
       renderAllDays();
 
@@ -285,158 +250,72 @@
     function renderAllDays() {
       const container = document.getElementById("daysContainer");
       container.innerHTML = "";
-
       const days = Object.keys(data).sort((a, b) => new Date(b) - new Date(a));
 
       days.forEach(day => {
         const dayCigs = data[day];
         let totalPart = dayCigs.reduce((sum, c) => sum + c.part, 0);
-
         let html = `
           <div class="day-block">
             <h3>${day}</h3>
             <table>
-              <tr>
-                <th>#</th>
-                <th>שכטות</th>
-                <th>פארשים</th>
-                <th>%</th>
-                <th>חלק</th>
-              </tr>
-        `;
-
+              <tr><th>#</th><th>שכטות</th><th>פארשים</th><th>%</th><th>חלק</th></tr>`;
         dayCigs.forEach((c, i) => {
-          const reversedIndex = dayCigs.length - i;
-          html += `
-            <tr>
-              <td>${reversedIndex}</td>
-              <td>${c.total}</td>
-              <td>${c.missed}</td>
-              <td>${c.percent.toFixed(0)}%</td>
-              <td>${c.part.toFixed(2)}</td>
-            </tr>`;
+          html += `<tr>
+            <td>${dayCigs.length - i}</td>
+            <td>${c.total}</td>
+            <td>${c.missed}</td>
+            <td>${c.percent.toFixed(0)}%</td>
+            <td>${c.part.toFixed(2)}</td></tr>`;
         });
-
-        html += `
-            </table>
-            <h4>סה״כ היום: ${totalPart.toFixed(2)} סיגריות</h4>
-          </div>`;
-
+        html += `</table><h4>סה״כ היום: ${totalPart.toFixed(2)} סיגריות</h4></div>`;
         container.innerHTML += html;
       });
 
-      // ✨ רשימת סיכום יומית למטה
       let summaryHtml = "<h3 style='margin-top:30px;'>📅 סיכום ימים</h3><ul style='list-style:none; padding:0;'>";
       days.forEach(day => {
-        const dayCigs = data[day];
-        const totalPart = dayCigs.reduce((sum, c) => sum + c.part, 0);
-        summaryHtml += `<li style="margin:5px 0; background:#f0f4ff; border-radius:10px; padding:6px 10px;">
-          ${day}: ${totalPart.toFixed(2)} סיגריות
-        </li>`;
+        const totalPart = data[day].reduce((sum, c) => sum + c.part, 0);
+        summaryHtml += `<li style="margin:5px 0; background:#f0f4ff; border-radius:10px; padding:6px 10px;">${day}: ${totalPart.toFixed(2)} סיגריות</li>`;
       });
       summaryHtml += "</ul>";
       container.innerHTML += summaryHtml;
     }
 
-    /* -----------------------------
-       ⏱️ טיימר עם localStorage
-    ----------------------------- */
-    /* -----------------------------
-   ⏱️ טיימר עם localStorage — גרסה יציבה
------------------------------ */
-let timer;
-let remainingSeconds = 0;
-let timerRunning = false;
+    /* ⏱️ טיימר יציב עם שמירה */
+    let timer;
+    let remainingSeconds = 0;
+    let timerRunning = false;
 
-function startTimer() {
-  const minutesInput = document.getElementById("timerMinutes").value;
+    function startTimer() {
+      const minutesInput = document.getElementById("timerMinutes").value;
+      if (minutesInput && !isNaN(minutesInput)) remainingSeconds = parseInt(minutesInput) * 60;
 
-  // רק אם המשתמש הכניס ערך חדש
-  if (minutesInput && !isNaN(minutesInput)) {
-    remainingSeconds = parseInt(minutesInput) * 60;
-    saveTimerState(true);
-  }
+      if (remainingSeconds <= 0) return alert("תכתוב כמה דקות להפעיל את הטיימר!");
+      if (timerRunning) return;
 
-  if (remainingSeconds <= 0) {
-    alert("תכתוב כמה דקות להפעיל את הטיימר!");
-    return;
-  }
-
-  // אם כבר רץ — לא להתחיל שוב
-  if (timerRunning) return;
-
-  timerRunning = true;
-  saveTimerState(true);
-
-  timer = setInterval(() => {
-    remainingSeconds--;
-    updateTimerDisplay();
-    saveTimerState(true);
-
-    if (remainingSeconds <= 0) {
-      clearInterval(timer);
-      timerRunning = false;
-      remainingSeconds = 0;
-      updateTimerDisplay();
-      saveTimerState(false);
-      alert("⏰ הזמן נגמר!");
-    }
-  }, 1000);
-}
-
-function resetTimer() {
-  clearInterval(timer);
-  remainingSeconds = 0;
-  timerRunning = false;
-  saveTimerState(false);
-  updateTimerDisplay();
-}
-
-function updateTimerDisplay() {
-  const hours = String(Math.floor(remainingSeconds / 3600)).padStart(2, "0");
-  const minutes = String(Math.floor((remainingSeconds % 3600) / 60)).padStart(2, "0");
-  const seconds = String(remainingSeconds % 60).padStart(2, "0");
-  document.getElementById("timerDisplay").textContent = `${hours}:${minutes}:${seconds}`;
-}
-
-function saveTimerState(isRunning) {
-  localStorage.setItem("timerRemaining", remainingSeconds);
-  localStorage.setItem("timerRunning", isRunning ? "true" : "false");
-}
-
-function loadTimer() {
-  const saved = localStorage.getItem("timerRemaining");
-  const running = localStorage.getItem("timerRunning") === "true";
-
-  if (saved) {
-    remainingSeconds = parseInt(saved);
-  }
-
-  updateTimerDisplay();
-
-  // ממשיך רק אם היה רץ קודם
-  if (running && remainingSeconds > 0) {
-    timerRunning = true;
-    timer = setInterval(() => {
-      remainingSeconds--;
-      updateTimerDisplay();
+      timerRunning = true;
       saveTimerState(true);
 
-      if (remainingSeconds <= 0) {
-        clearInterval(timer);
-        timerRunning = false;
-        remainingSeconds = 0;
+      timer = setInterval(() => {
+        remainingSeconds--;
         updateTimerDisplay();
-        saveTimerState(false);
-        alert("⏰ הזמן נגמר!");
-      }
-    }, 1000);
-  }
-}
+        saveTimerState(true);
+        if (remainingSeconds <= 0) {
+          clearInterval(timer);
+          timerRunning = false;
+          remainingSeconds = 0;
+          updateTimerDisplay();
+          saveTimerState(false);
+          alert("⏰ הזמן נגמר!");
+        }
+      }, 1000);
+    }
+
     function resetTimer() {
       clearInterval(timer);
       remainingSeconds = 0;
-      saveTimer();
+      timerRunning = false;
+      saveTimerState(false);
       updateTimerDisplay();
     }
 
@@ -447,65 +326,53 @@ function loadTimer() {
       document.getElementById("timerDisplay").textContent = `${hours}:${minutes}:${seconds}`;
     }
 
-    function saveTimer() {
+    function saveTimerState(isRunning) {
       localStorage.setItem("timerRemaining", remainingSeconds);
+      localStorage.setItem("timerRunning", isRunning ? "true" : "false");
     }
 
     function loadTimer() {
       const saved = localStorage.getItem("timerRemaining");
-      if (saved) {
-        remainingSeconds = parseInt(saved);
-        if (remainingSeconds > 0) {
+      const running = localStorage.getItem("timerRunning") === "true";
+      if (saved) remainingSeconds = parseInt(saved);
+      updateTimerDisplay();
+
+      if (running && remainingSeconds > 0) {
+        timerRunning = true;
+        timer = setInterval(() => {
+          remainingSeconds--;
           updateTimerDisplay();
-          startTimer();
-        } else {
-          updateTimerDisplay();
-        }
-      } else {
-        updateTimerDisplay();
+          saveTimerState(true);
+          if (remainingSeconds <= 0) {
+            clearInterval(timer);
+            timerRunning = false;
+            remainingSeconds = 0;
+            updateTimerDisplay();
+            saveTimerState(false);
+            alert("⏰ הזמן נגמר!");
+          }
+        }, 1000);
       }
     }
-// נשמור את היום האחרון שהקוד רץ
-function getSavedDayKey() {
-  return localStorage.getItem("lastDayKey");
-}
 
-function saveCurrentDayKey() {
-  localStorage.setItem("lastDayKey", getCurrentDayKey());
-}
+    /* איפוס יומי ב־03:00 */
+    function getSavedDayKey() { return localStorage.getItem("lastDayKey"); }
+    function saveCurrentDayKey() { localStorage.setItem("lastDayKey", getCurrentDayKey()); }
 
-// פונקציה שמריצה את הבדיקה אחת לדקה
-function checkForNewDay() {
-  const savedDay = getSavedDayKey();
-  const currentDay = getCurrentDayKey();
-
-  // אם היום השתנה → זה אומר שעברנו את 3 בלילה
-  if (savedDay && savedDay !== currentDay) {
-    console.log("יום חדש — מאפסים ספירה יומית");
-
-    // שומרים את הנתונים כמו שהם
-    localStorage.setItem("dailyCigs", JSON.stringify(data));
-
-    // מאפסים רק את הסיגריות של היום החדש
-    data = {};
-    data[currentDay] = [];
-
-    // מעדכנים בלוקל־סטורג׳
-    localStorage.setItem("dailyCigs", JSON.stringify(data));
-
-    // מציגים מחדש
-    renderAllDays();
-
-    // מעדכנים את היום החדש
-    saveCurrentDayKey();
-  }
-}
-
-// נריץ את הבדיקה כל דקה
-setInterval(checkForNewDay, 60 * 1000);
-
-// נוודא שבהתחלה נשמר היום הנוכחי
-window.addEventListener("load", saveCurrentDayKey);
+    function checkForNewDay() {
+      const savedDay = getSavedDayKey();
+      const currentDay = getCurrentDayKey();
+      if (savedDay && savedDay !== currentDay) {
+        console.log("יום חדש — מאפסים ספירה יומית");
+        data = {};
+        data[currentDay] = [];
+        localStorage.setItem("dailyCigs", JSON.stringify(data));
+        renderAllDays();
+        saveCurrentDayKey();
+      }
+    }
+    setInterval(checkForNewDay, 60 * 1000);
+    window.addEventListener("load", saveCurrentDayKey);
   </script>
 
 </body>
