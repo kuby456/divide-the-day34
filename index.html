@@ -341,39 +341,98 @@
     /* -----------------------------
        ⏱️ טיימר עם localStorage
     ----------------------------- */
-    let timer;
-    let remainingSeconds = 0;
+    /* -----------------------------
+   ⏱️ טיימר עם localStorage — גרסה יציבה
+----------------------------- */
+let timer;
+let remainingSeconds = 0;
+let timerRunning = false;
 
-    function startTimer() {
-      const minutesInput = document.getElementById("timerMinutes").value;
+function startTimer() {
+  const minutesInput = document.getElementById("timerMinutes").value;
 
-      // רק אם המשתמש הכניס ערך חדש
-      if (minutesInput && !isNaN(minutesInput)) {
-        remainingSeconds = parseInt(minutesInput) * 60;
-        saveTimer();
-      }
+  // רק אם המשתמש הכניס ערך חדש
+  if (minutesInput && !isNaN(minutesInput)) {
+    remainingSeconds = parseInt(minutesInput) * 60;
+    saveTimerState(true);
+  }
+
+  if (remainingSeconds <= 0) {
+    alert("תכתוב כמה דקות להפעיל את הטיימר!");
+    return;
+  }
+
+  // אם כבר רץ — לא להתחיל שוב
+  if (timerRunning) return;
+
+  timerRunning = true;
+  saveTimerState(true);
+
+  timer = setInterval(() => {
+    remainingSeconds--;
+    updateTimerDisplay();
+    saveTimerState(true);
+
+    if (remainingSeconds <= 0) {
+      clearInterval(timer);
+      timerRunning = false;
+      remainingSeconds = 0;
+      updateTimerDisplay();
+      saveTimerState(false);
+      alert("⏰ הזמן נגמר!");
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timer);
+  remainingSeconds = 0;
+  timerRunning = false;
+  saveTimerState(false);
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const hours = String(Math.floor(remainingSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((remainingSeconds % 3600) / 60)).padStart(2, "0");
+  const seconds = String(remainingSeconds % 60).padStart(2, "0");
+  document.getElementById("timerDisplay").textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function saveTimerState(isRunning) {
+  localStorage.setItem("timerRemaining", remainingSeconds);
+  localStorage.setItem("timerRunning", isRunning ? "true" : "false");
+}
+
+function loadTimer() {
+  const saved = localStorage.getItem("timerRemaining");
+  const running = localStorage.getItem("timerRunning") === "true";
+
+  if (saved) {
+    remainingSeconds = parseInt(saved);
+  }
+
+  updateTimerDisplay();
+
+  // ממשיך רק אם היה רץ קודם
+  if (running && remainingSeconds > 0) {
+    timerRunning = true;
+    timer = setInterval(() => {
+      remainingSeconds--;
+      updateTimerDisplay();
+      saveTimerState(true);
 
       if (remainingSeconds <= 0) {
-        alert("תכתוב כמה דקות להפעיל את הטיימר!");
-        return;
-      }
-
-      if (timer) clearInterval(timer);
-
-      timer = setInterval(() => {
-        remainingSeconds--;
+        clearInterval(timer);
+        timerRunning = false;
+        remainingSeconds = 0;
         updateTimerDisplay();
-        saveTimer();
-
-        if (remainingSeconds <= 0) {
-          clearInterval(timer);
-          remainingSeconds = 0;
-          updateTimerDisplay();
-          alert("⏰ הזמן נגמר!");
-        }
-      }, 1000);
-    }
-
+        saveTimerState(false);
+        alert("⏰ הזמן נגמר!");
+      }
+    }, 1000);
+  }
+}
     function resetTimer() {
       clearInterval(timer);
       remainingSeconds = 0;
