@@ -1,167 +1,121 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>מעקב סיגריות יומי</title>
-  <style>
-    body {
-      font-family: "Heebo", sans-serif;
-      background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0);
-      margin: 0;
-      padding: 20px;
-      color: #1e3a8a;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    .menu {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .btn {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 16px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background: #1e40af;
-    }
-
-    #log {
-      margin-top: 30px;
-      text-align: center;
-      border-top: 2px dashed #94a3b8;
-      padding-top: 15px;
-    }
-
-    .day-row {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 10px;
-      margin: 8px auto;
-      max-width: 400px;
-    }
-
-    .day-row span {
-      display: inline-block;
-      width: 48%;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחשב תקציב יומי</title>
+<style>
+  body {
+    font-family: "Heebo", sans-serif;
+    background: linear-gradient(to bottom right, #f0f4ff, #e3eafc);
+    color: #1e3a8a;
+    text-align: center;
+    padding: 20px;
+  }
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    max-width: 400px;
+    margin: 40px auto;
+  }
+  input {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+    width: 80%;
+    margin-bottom: 10px;
+  }
+  button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover { background: #1e40af; }
+  h2, h3 { margin: 10px 0; }
+</style>
 </head>
 <body>
-  <h1>מעקב עישון יומי</h1>
 
-  <div id="menu" class="menu"></div>
+<div class="card">
+  <h2>מחשב תקציב חודשי חכם 💰</h2>
 
-  <div id="log"></div>
+  <label>הכנס תקציב חודשי (₪):</label><br>
+  <input type="number" id="budgetInput" placeholder="לדוגמה: 1500"><br>
+  <button onclick="setBudget()">קבע תקציב</button>
 
-  <script>
-    const cigaretteTypes = {
-      "ערביה (25)": 25,
-      "רגילה (12)": 12,
-      "טאצ׳ (10)": 10
+  <h3 id="dailyLimit"></h3>
+  <h3 id="remainingBudget"></h3>
+
+  <hr>
+  <label>הכנס סכום קנייה היום:</label><br>
+  <input type="number" id="spendInput" placeholder="לדוגמה: 25">
+  <button onclick="addExpense()">עדכן</button>
+</div>
+
+<script>
+  // טוען נתונים מה-localStorage
+  let data = JSON.parse(localStorage.getItem("budgetData")) || null;
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentDay = today.getDate();
+
+  function setBudget() {
+    const budget = parseFloat(document.getElementById("budgetInput").value);
+    if (!budget || budget <= 0) return alert("הכנס תקציב תקין!");
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    data = {
+      month: currentMonth,
+      budgetTotal: budget,
+      budgetLeft: budget,
+      daysInMonth: daysInMonth,
+      lastDay: currentDay
     };
-
-    const menu = document.getElementById("menu");
-    const log = document.getElementById("log");
-
-    // טען נתונים קיימים מהאחסון
-    let history = JSON.parse(localStorage.getItem("smokeHistory")) || [];
-
-    // פונקציה להצגת התפריט הראשי
-    function showCigaretteMenu() {
-      menu.innerHTML = "";
-      Object.entries(cigaretteTypes).forEach(([name, count]) => {
-        const btn = document.createElement("button");
-        btn.textContent = name;
-        btn.className = "btn";
-        btn.onclick = () => showPercentMenu(name, count);
-        menu.appendChild(btn);
-      });
-    }
-
-    // תפריט אחוזים
-    function showPercentMenu(type, total) {
-      menu.innerHTML = "";
-      for (let p = 0; p <= 100; p += 10) {
-        const num = Math.round((total * p) / 100);
-        const btn = document.createElement("button");
-        btn.textContent = `${p}% (${num} שכטות)`;
-        btn.className = "btn";
-        btn.onclick = () => addEntry(type, num);
-        menu.appendChild(btn);
-      }
-
-      // כפתור חזרה לבחירת סוג
-      const back = document.createElement("button");
-      back.textContent = "↩ חזור";
-      back.className = "btn";
-      back.style.background = "#64748b";
-      back.onclick = showCigaretteMenu;
-      menu.appendChild(back);
-    }
-
-    // קבלת תאריך מותאם ליום שמתחיל ב־3 בלילה
-    function getAdjustedDate() {
-      const now = new Date();
-      if (now.getHours() < 3) {
-        now.setDate(now.getDate() - 1);
-      }
-      return now.toISOString().split("T")[0];
-    }
-
-    // 🟩 הוספת רישום חדש (חישוב לפי אחוז מסיגריה)
-function addEntry(type, amount) {
-  const date = getAdjustedDate();
-  const totalShachot = cigaretteTypes[type];
-
-  // חישוב כמה סיגריות שלמות זה (למשל 10% = 0.1)
-  const cigaretteFraction = amount / totalShachot;
-
-  let day = history.find(d => d.date === date);
-  if (!day) {
-    day = { date, total: 0, entries: [] };
-    history.unshift(day);
+    localStorage.setItem("budgetData", JSON.stringify(data));
+    updateDisplay();
   }
 
-  day.total += cigaretteFraction; // 🧮 עכשיו מצטבר סך הסיגריות
-  day.entries.push({ type, fraction: cigaretteFraction.toFixed(2), time: new Date().toLocaleTimeString() });
+  function addExpense() {
+  if (!data) return alert("קבע תקציב קודם!");
+  const spendInput = document.getElementById("spendInput"); // ✨ תופס את התיבה
+  const spent = parseFloat(spendInput.value);
+  if (!spent || spent <= 0) return alert("הכנס סכום תקין!");
+  data.budgetLeft -= spent;
+  data.lastDay = currentDay;
+  localStorage.setItem("budgetData", JSON.stringify(data));
 
-  localStorage.setItem("smokeHistory", JSON.stringify(history));
-  renderLog();
-  showCigaretteMenu();
+  spendInput.value = ""; // 🧹 השורה שמנקה את התיבה
+
+  updateDisplay();
 }
 
-
-    // הצגת יומן הימים
-    function renderLog() {
-      log.innerHTML = "<h3>יומן יומי</h3>";
-      history.forEach(day => {
-        const div = document.createElement("div");
-        div.className = "day-row";
-        const d = new Date(day.date);
-        const dayName = d.toLocaleDateString("he-IL", { weekday: "short", day: "2-digit", month: "2-digit" });
-div.innerHTML = `<span><b>${dayName}</b></span><span>סה״כ: ${day.total.toFixed(2)} סיגריות</span>`;
-        log.appendChild(div);
-      });
+  function updateDisplay() {
+    if (!data) return;
+    // אפס תקציב בתחילת חודש חדש
+    if (data.month !== currentMonth) {
+      localStorage.removeItem("budgetData");
+      document.getElementById("dailyLimit").textContent = "התחיל חודש חדש! קבע תקציב חדש.";
+      return;
     }
 
-    showCigaretteMenu();
-    renderLog();
-  </script>
+    const remainingDays = data.daysInMonth - currentDay + 1;
+    const daily = data.budgetLeft / remainingDays;
+
+    document.getElementById("dailyLimit").textContent = 
+      `היום אתה יכול לקנות בכ-${daily.toFixed(2)} ₪`;
+    document.getElementById("remainingBudget").textContent = 
+      `נשאר לך החודש: ${data.budgetLeft.toFixed(2)} ₪`;
+  }
+
+  updateDisplay();
+</script>
+
 </body>
 </html>
