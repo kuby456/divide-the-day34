@@ -62,59 +62,77 @@
 
 <script>
   // טוען נתונים מה-localStorage
-  let data = JSON.parse(localStorage.getItem("budgetData")) || null;
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentDay = today.getDate();
+  // טוען נתונים מה-localStorage
+let data = JSON.parse(localStorage.getItem("budgetData")) || null;
+const today = new Date();
+const currentMonth = today.getMonth();
+const currentDay = today.getDate();
 
-  function setBudget() {
-    const budget = parseFloat(document.getElementById("budgetInput").value);
-    if (!budget || budget <= 0) return alert("הכנס תקציב תקין!");
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    data = {
-      month: currentMonth,
-      budgetTotal: budget,
-      budgetLeft: budget,
-      daysInMonth: daysInMonth,
-      lastDay: currentDay
-    };
-    localStorage.setItem("budgetData", JSON.stringify(data));
-    updateDisplay();
-  }
+function setBudget() {
+  const budget = parseFloat(document.getElementById("budgetInput").value);
+  if (!budget || budget <= 0) return alert("הכנס תקציב תקין!");
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  data = {
+    month: currentMonth,
+    budgetTotal: budget,
+    budgetLeft: budget,
+    daysInMonth: daysInMonth,
+    lastDay: currentDay
+  };
+  localStorage.setItem("budgetData", JSON.stringify(data));
+  updateDisplay();
+}
 
-  function addExpense() {
+function addExpense() {
   if (!data) return alert("קבע תקציב קודם!");
-  const spendInput = document.getElementById("spendInput"); // ✨ תופס את התיבה
+  const spendInput = document.getElementById("spendInput");
   const spent = parseFloat(spendInput.value);
   if (!spent || spent <= 0) return alert("הכנס סכום תקין!");
+
+  // מעדכן את התקציב
   data.budgetLeft -= spent;
   data.lastDay = currentDay;
   localStorage.setItem("budgetData", JSON.stringify(data));
 
-  spendInput.value = ""; // 🧹 השורה שמנקה את התיבה
+  // מנקה את תיבת הקנייה
+  spendInput.value = "";
 
   updateDisplay();
 }
 
-  function updateDisplay() {
-    if (!data) return;
-    // אפס תקציב בתחילת חודש חדש
-    if (data.month !== currentMonth) {
-      localStorage.removeItem("budgetData");
-      document.getElementById("dailyLimit").textContent = "התחיל חודש חדש! קבע תקציב חדש.";
-      return;
-    }
+function updateDisplay() {
+  if (!data) return;
 
-    const remainingDays = data.daysInMonth - currentDay + 1;
-    const daily = data.budgetLeft / remainingDays;
-
-    document.getElementById("dailyLimit").textContent = 
-      `היום אתה יכול לקנות בכ-${daily.toFixed(2)} ₪`;
-    document.getElementById("remainingBudget").textContent = 
-      `נשאר לך החודש: ${data.budgetLeft.toFixed(2)} ₪`;
+  // אם זה חודש חדש – אפס תקציב
+  if (data.month !== currentMonth) {
+    localStorage.removeItem("budgetData");
+    document.getElementById("dailyLimit").textContent = "התחיל חודש חדש! קבע תקציב חדש.";
+    return;
   }
 
-  updateDisplay();
+  // חישוב מצטבר: אם עברו ימים בלי קנייה, התקציב שלא נוצל עובר קדימה
+  const daysPassed = currentDay - data.lastDay;
+  if (daysPassed > 0) {
+    // מחשב תקציב יומי בסיסי
+    const baseDaily = data.budgetTotal / data.daysInMonth;
+    // מוסיף את הימים שלא נוצלו
+    const unused = baseDaily * daysPassed;
+    data.budgetLeft += unused;
+    data.lastDay = currentDay;
+    localStorage.setItem("budgetData", JSON.stringify(data));
+  }
+
+  // מחשב תקציב יומי לפי מה שנשאר
+  const remainingDays = data.daysInMonth - currentDay + 1;
+  const daily = data.budgetLeft / remainingDays;
+
+  document.getElementById("dailyLimit").textContent =
+    `היום אתה יכול לקנות בכ-${daily.toFixed(2)} ₪`;
+  document.getElementById("remainingBudget").textContent =
+    `נשאר לך החודש: ${data.budgetLeft.toFixed(2)} ₪`;
+}
+
+updateDisplay();
 </script>
 
 </body>
