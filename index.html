@@ -1,387 +1,167 @@
-```html
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>מחשבון שכטות יומי</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מעקב סיגריות יומי</title>
   <style>
     body {
       font-family: "Heebo", sans-serif;
-      background: linear-gradient(to bottom right, #e0eaff, #f6f7fb);
-      text-align: center;
+      background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0);
+      margin: 0;
       padding: 20px;
       color: #1e3a8a;
-      margin: 0;
-    }
-    #timerDisplay {
-      font-size: 48px;
-      font-weight: bold;
-      margin-top: 15px;
-      color: #1e3a8a;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-    }
-
-    #timerControls {
-      margin-top: 10px;
-    }
-
-    #timerControls input {
-      width: 90px;
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
       text-align: center;
-      font-size: 16px;
-    }
-
-    #timerControls button {
-      background-color: #2563eb;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-      margin: 5px;
-    }
-
-    #timerControls button:hover {
-      background-color: #1e3a8a;
     }
 
     h1 {
-      color: #2563eb;
-      margin-bottom: 25px;
-      font-size: 22px;
-      letter-spacing: 0.5px;
+      margin-bottom: 20px;
     }
 
-    input {
-      width: 42%;
-      padding: 10px;
-      margin: 5px 3px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 17px;
-      box-sizing: border-box;
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
     }
 
-    button {
-      background-color: #2563eb;
+    .btn {
+      background: #2563eb;
       color: white;
-      padding: 12px 24px;
       border: none;
       border-radius: 10px;
-      font-size: 17px;
+      padding: 10px 16px;
       cursor: pointer;
-      margin-top: 10px;
-      width: 30%;
-      max-width: 320px;
+      font-size: 1rem;
+      transition: background 0.2s;
     }
 
-    button:hover {
-      background-color: #1e3a8a;
+    .btn:hover {
+      background: #1e40af;
     }
 
-    .day-block {
+    #log {
+      margin-top: 30px;
+      text-align: center;
+      border-top: 2px dashed #94a3b8;
+      padding-top: 15px;
+    }
+
+    .day-row {
       background: white;
-      border-radius: 14px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-      margin: 25px auto;
-      padding: 15px;
-      text-align: right;
-      width: 100%;
-      max-width: 440px;
-      box-sizing: border-box;
-    }
-
-    .day-block h3 {
-      color: #2563eb;
-      margin: 0 0 10px 0;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 15px;
-    }
-
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #f0f4ff;
-      color: #1e3a8a;
-      font-weight: 600;
-    }
-
-    h4 {
-      text-align: center;
-      margin-top: 12px;
-      font-size: 16px;
-      color: #1e3a8a;
-    }
-
-    @media (max-width: 480px) {
-      #timerDisplay { font-size: 36px; }
-      input { width: 45%; font-size: 16px; }
-      button { font-size: 16px; padding: 10px 18px; }
-      table { font-size: 14px; }
-      .day-block { max-width: 95%; }
-    }
-
-    .brand-list {
-      background: #ffffff;
-      border: 3px solid #2563eb;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0, 0, 50, 0.1);
-      padding: 20px;
-      margin: 25px auto;
-      max-width: 400px;
-      text-align: right;
-      color: #1e3a8a;
-    }
-
-    .brand-list h2 {
-      margin-top: 0;
-      font-size: 20px;
-      text-align: center;
-      color: #1e40af;
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 6px;
-    }
-
-    .brand-list li {
-      background: #f0f4ff;
       border-radius: 10px;
-      padding: 10px 14px;
-      margin: 8px 0;
-      font-size: 17px;
-      font-weight: bold;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-      list-style: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 10px;
+      margin: 8px auto;
+      max-width: 400px;
     }
 
+    .day-row span {
+      display: inline-block;
+      width: 48%;
+    }
   </style>
 </head>
 <body>
-  <!-- 🕒 טיימר -->
-  <div id="timerSection">
-    <div id="timerDisplay">00:00:00</div>
-    <div id="timerControls">
-      <input type="number" id="timerMinutes" placeholder="דקות">
-      <br>
-      <button onclick="startTimer()">התחל</button>
-      <button onclick="resetTimer()">איפוס</button>
-    </div>
-  </div>
-  <!-- 📦 רשימת מותגים -->
-  <div class="brand-list">
-    <h2>מספר שכטות בכל סיגריה</h2>
-    <ul>
-      <li>קפיטל — 24 שכטות</li>
-      <li>ערביה — 25 שכטות</li>
-      <li>נקסט אוריגינל וופיין — 12 שכטות</li>
-      <li>מלבורו טאץ — 10 שכטות</li>
-    </ul>
-  </div>
-  <h1>מחשבון שכטות יומי 🚬</h1>
-  <div>
-    <input type="number" id="totalPuffs" placeholder="שכטות בסיגריה">
-    <input type="number" id="missedPuffs" placeholder="פארשים">
-    <br>
-    <button onclick="addCigarette()" style="width: 50%;">הוסף סיגריה</button>
-  </div>
-  <div id="daysContainer"></div>
-  <script>
-    /* 🕓 חלוקה לפי יום (מתחיל ב-03:00) */
-    function getCurrentDayKey() {
-      const now = new Date();
-      const cutoff = new Date();
-      cutoff.setHours(3, 0, 0, 0);
-      if (now < cutoff) now.setDate(now.getDate() - 1);
-      return now.toLocaleDateString("he-IL");
-    }
+  <h1>מעקב עישון יומי</h1>
 
-    /* 🚬 שמירת נתונים יומיים */
-    let data = {};
-    window.onload = function() {
-      const saved = localStorage.getItem("dailyCigs");
-      if (saved) data = JSON.parse(saved);
-      renderAllDays();
-      loadTimer();
+  <div id="menu" class="menu"></div>
+
+  <div id="log"></div>
+
+  <script>
+    const cigaretteTypes = {
+      "ערביה (25)": 25,
+      "רגילה (12)": 12,
+      "טאצ׳ (10)": 10
     };
 
-    function addCigarette() {
-      const total = parseFloat(document.getElementById("totalPuffs").value);
-      const missed = parseFloat(document.getElementById("missedPuffs").value);
-      const today = getCurrentDayKey();
+    const menu = document.getElementById("menu");
+    const log = document.getElementById("log");
 
-      if (isNaN(total) || total <= 0) return alert("תכתוב כמה שכטות יש בסיגריה!");
-      if (isNaN(missed) || missed < 0) return alert("תכתוב כמה שכטות לא עישנת (פארשים)!");
+    // טען נתונים קיימים מהאחסון
+    let history = JSON.parse(localStorage.getItem("smokeHistory")) || [];
 
-      const smoked = total - missed;
-      const percent = (missed / total) * 100;
-      const part = smoked / total;
-
-      if (!data[today]) data[today] = [];
-      data[today].unshift({ total, missed, percent, part });
-      localStorage.setItem("dailyCigs", JSON.stringify(data));
-      renderAllDays();
-
-      document.getElementById("totalPuffs").value = "";
-      document.getElementById("missedPuffs").value = "";
-    }
-
-    function renderAllDays() {
-      const container = document.getElementById("daysContainer");
-      container.innerHTML = "";
-      const days = Object.keys(data).sort((a, b) => new Date(b) - new Date(a));
-
-      days.forEach(day => {
-        const dayCigs = data[day];
-        let totalPart = dayCigs.reduce((sum, c) => sum + c.part, 0);
-        let html = `
-          <div class="day-block">
-            <h3>${day}</h3>
-            <table>
-              <tr><th>#</th><th>שכטות</th><th>פארשים</th><th>%</th><th>חלק</th></tr>`;
-        dayCigs.forEach((c, i) => {
-          html += `<tr>
-            <td>${dayCigs.length - i}</td>
-            <td>${c.total}</td>
-            <td>${c.missed}</td>
-            <td>${c.percent.toFixed(0)}%</td>
-            <td>${c.part.toFixed(2)}</td></tr>`;
-        });
-        html += `</table><h4>סה״כ היום: ${totalPart.toFixed(2)} סיגריות</h4></div>`;
-        container.innerHTML += html;
+    // פונקציה להצגת התפריט הראשי
+    function showCigaretteMenu() {
+      menu.innerHTML = "";
+      Object.entries(cigaretteTypes).forEach(([name, count]) => {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        btn.className = "btn";
+        btn.onclick = () => showPercentMenu(name, count);
+        menu.appendChild(btn);
       });
-
-      let summaryHtml = "<h3 style='margin-top:30px;'>📅 סיכום ימים</h3><ul style='list-style:none; padding:0;'>";
-      days.forEach(day => {
-        const totalPart = data[day].reduce((sum, c) => sum + c.part, 0);
-        summaryHtml += `<li style="margin:5px 0; background:#f0f4ff; border-radius:10px; padding:6px 10px;">${day}: ${totalPart.toFixed(2)} סיגריות</li>`;
-      });
-      summaryHtml += "</ul>";
-      container.innerHTML += summaryHtml;
     }
 
-    /* ⏱️ טיימר יציב עם שמירה */
-    let timer;
-    let remainingSeconds = 0;
-    let timerRunning = false;
-    let lastSaveTime = 0;
-
-    function startTimer() {
-      const minutesInput = document.getElementById("timerMinutes").value;
-      if (minutesInput && !isNaN(minutesInput)) remainingSeconds = parseInt(minutesInput) * 60;
-
-      if (remainingSeconds <= 0) return alert("תכתוב כמה דקות להפעיל את הטיימר!");
-      if (timerRunning) return;
-
-      timerRunning = true;
-      lastSaveTime = Date.now();
-      saveTimerState();
-      runTimerInterval();
-    }
-
-    function runTimerInterval() {
-      clearInterval(timer);
-      timer = setInterval(() => {
-        const now = Date.now();
-        const elapsedMs = now - lastSaveTime;
-        remainingSeconds -= Math.floor(elapsedMs / 1000);
-        lastSaveTime = now;
-
-        if (remainingSeconds <= 0) {
-          remainingSeconds = 0;
-          clearInterval(timer);
-          timerRunning = false;
-          alert("⏰ הזמן נגמר!");
-        }
-
-        updateTimerDisplay();
-        saveTimerState();
-      }, 1000);
-    }
-
-    function resetTimer() {
-      clearInterval(timer);
-      remainingSeconds = 0;
-      timerRunning = false;
-      lastSaveTime = 0;
-      saveTimerState();
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const hours = String(Math.floor(remainingSeconds / 3600)).padStart(2, "0");
-      const minutes = String(Math.floor((remainingSeconds % 3600) / 60)).padStart(2, "0");
-      const seconds = String(remainingSeconds % 60).padStart(2, "0");
-      document.getElementById("timerDisplay").textContent = `${hours}:${minutes}:${seconds}`;
-    }
-
-    function saveTimerState() {
-      localStorage.setItem("timerRemaining", remainingSeconds);
-      localStorage.setItem("timerRunning", timerRunning ? "true" : "false");
-      localStorage.setItem("timerLastSave", lastSaveTime);
-    }
-
-    function loadTimer() {
-      const savedRemaining = localStorage.getItem("timerRemaining");
-      const running = localStorage.getItem("timerRunning") === "true";
-      const savedLastSave = localStorage.getItem("timerLastSave");
-
-      if (savedRemaining) remainingSeconds = parseInt(savedRemaining);
-      if (savedLastSave) lastSaveTime = parseInt(savedLastSave);
-
-      if (running && remainingSeconds > 0) {
-        const now = Date.now();
-        const elapsedMs = now - lastSaveTime;
-        remainingSeconds -= Math.floor(elapsedMs / 1000);
-        lastSaveTime = now;
-
-        if (remainingSeconds > 0) {
-          timerRunning = true;
-          runTimerInterval();
-        } else {
-          remainingSeconds = 0;
-          timerRunning = false;
-          alert("⏰ הזמן נגמר!");
-        }
+    // תפריט אחוזים
+    function showPercentMenu(type, total) {
+      menu.innerHTML = "";
+      for (let p = 0; p <= 100; p += 10) {
+        const num = Math.round((total * p) / 100);
+        const btn = document.createElement("button");
+        btn.textContent = `${p}% (${num} שכטות)`;
+        btn.className = "btn";
+        btn.onclick = () => addEntry(type, num);
+        menu.appendChild(btn);
       }
 
-      updateTimerDisplay();
+      // כפתור חזרה לבחירת סוג
+      const back = document.createElement("button");
+      back.textContent = "↩ חזור";
+      back.className = "btn";
+      back.style.background = "#64748b";
+      back.onclick = showCigaretteMenu;
+      menu.appendChild(back);
     }
 
-    /* איפוס יומי ב־03:00 */
-    function getSavedDayKey() { return localStorage.getItem("lastDayKey"); }
-    function saveCurrentDayKey() { localStorage.setItem("lastDayKey", getCurrentDayKey()); }
-
-    function checkForNewDay() {
-      const savedDay = getSavedDayKey();
-      const currentDay = getCurrentDayKey();
-      if (savedDay && savedDay !== currentDay) {
-        console.log("יום חדש — מאפסים ספירה יומית");
-        // לא מוחקים את data = {} כדי לשמור היסטוריה
-        // רק מבטיחים שיש מערך ליום החדש, אבל addCigarette יעשה את זה
-        localStorage.setItem("dailyCigs", JSON.stringify(data));
-        renderAllDays();
-        saveCurrentDayKey();
+    // קבלת תאריך מותאם ליום שמתחיל ב־3 בלילה
+    function getAdjustedDate() {
+      const now = new Date();
+      if (now.getHours() < 3) {
+        now.setDate(now.getDate() - 1);
       }
+      return now.toISOString().split("T")[0];
     }
-    setInterval(checkForNewDay, 60 * 1000);
-    window.addEventListener("load", saveCurrentDayKey);
+
+    // 🟩 הוספת רישום חדש (חישוב לפי אחוז מסיגריה)
+function addEntry(type, amount) {
+  const date = getAdjustedDate();
+  const totalShachot = cigaretteTypes[type];
+
+  // חישוב כמה סיגריות שלמות זה (למשל 10% = 0.1)
+  const cigaretteFraction = amount / totalShachot;
+
+  let day = history.find(d => d.date === date);
+  if (!day) {
+    day = { date, total: 0, entries: [] };
+    history.unshift(day);
+  }
+
+  day.total += cigaretteFraction; // 🧮 עכשיו מצטבר סך הסיגריות
+  day.entries.push({ type, fraction: cigaretteFraction.toFixed(2), time: new Date().toLocaleTimeString() });
+
+  localStorage.setItem("smokeHistory", JSON.stringify(history));
+  renderLog();
+  showCigaretteMenu();
+}
+
+
+    // הצגת יומן הימים
+    function renderLog() {
+      log.innerHTML = "<h3>יומן יומי</h3>";
+      history.forEach(day => {
+        const div = document.createElement("div");
+        div.className = "day-row";
+        const d = new Date(day.date);
+        const dayName = d.toLocaleDateString("he-IL", { weekday: "short", day: "2-digit", month: "2-digit" });
+div.innerHTML = `<span><b>${dayName}</b></span><span>סה״כ: ${day.total.toFixed(2)} סיגריות</span>`;
+        log.appendChild(div);
+      });
+    }
+
+    showCigaretteMenu();
+    renderLog();
   </script>
 </body>
 </html>
-```
