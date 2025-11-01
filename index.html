@@ -61,8 +61,6 @@
 </div>
 
 <script>
-  // טוען נתונים מה-localStorage
-  // טוען נתונים מה-localStorage
 let data = JSON.parse(localStorage.getItem("budgetData")) || null;
 const today = new Date();
 const currentMonth = today.getMonth();
@@ -71,14 +69,18 @@ const currentDay = today.getDate();
 function setBudget() {
   const budget = parseFloat(document.getElementById("budgetInput").value);
   if (!budget || budget <= 0) return alert("הכנס תקציב תקין!");
+  
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  
   data = {
     month: currentMonth,
-    budgetTotal: budget,
-    budgetLeft: budget,
-    daysInMonth: daysInMonth,
-    lastDay: currentDay
+    daysInMonth,
+    totalBudget: budget,
+    dailyBase: budget / daysInMonth,
+    lastDay: currentDay,
+    balanceToday: budget / daysInMonth, // כמה יש לו להוציא היום
   };
+  
   localStorage.setItem("budgetData", JSON.stringify(data));
   updateDisplay();
 }
@@ -89,49 +91,41 @@ function addExpense() {
   const spent = parseFloat(spendInput.value);
   if (!spent || spent <= 0) return alert("הכנס סכום תקין!");
 
-  // מעדכן את התקציב
-  data.budgetLeft -= spent;
+  // מוריד ישירות מהיתרה היומית
+  data.balanceToday -= spent;
+
+  // שומר תאריך אחרון
   data.lastDay = currentDay;
   localStorage.setItem("budgetData", JSON.stringify(data));
 
-  // מנקה את תיבת הקנייה
   spendInput.value = "";
-
   updateDisplay();
 }
 
 function updateDisplay() {
   if (!data) return;
 
-  // אם זה חודש חדש – אפס תקציב
+  // אם זה חודש חדש – איפוס
   if (data.month !== currentMonth) {
     localStorage.removeItem("budgetData");
     document.getElementById("dailyLimit").textContent = "התחיל חודש חדש! קבע תקציב חדש.";
+    document.getElementById("remainingBudget").textContent = "";
     return;
   }
 
-  // חישוב מצטבר: אם עברו ימים בלי קנייה, התקציב שלא נוצל עובר קדימה
   const daysPassed = currentDay - data.lastDay;
   if (daysPassed > 0) {
-    // מחשב תקציב יומי בסיסי
-    const baseDaily = data.budgetTotal / data.daysInMonth;
-    // מוסיף את הימים שלא נוצלו
-    const unused = baseDaily * daysPassed;
-    data.budgetLeft += unused;
+    // אם עברו ימים, מוסיף את הימים שלא נוצלו
+    data.balanceToday += data.dailyBase * daysPassed;
     data.lastDay = currentDay;
     localStorage.setItem("budgetData", JSON.stringify(data));
   }
 
-  // מחשב תקציב יומי לפי מה שנשאר
-  const remainingDays = data.daysInMonth - currentDay + 1;
-  const daily = data.budgetLeft / remainingDays;
-
   document.getElementById("dailyLimit").textContent =
-    `היום אתה יכול לקנות בכ-${daily.toFixed(2)} ₪`;
+    `יתרה יומית זמינה להיום: ${data.balanceToday.toFixed(2)} ₪`;
   document.getElementById("remainingBudget").textContent =
-    `נשאר לך החודש: ${data.budgetLeft.toFixed(2)} ₪`;
+    `תקציב חודשי כולל: ${data.totalBudget.toFixed(2)} ₪ (${data.dailyBase.toFixed(2)} ₪ ליום)`;
 }
-
 updateDisplay();
 </script>
 
