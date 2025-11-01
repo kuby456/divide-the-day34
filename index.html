@@ -196,7 +196,7 @@ hr {
   <label>הכנס תקציב חודשי (₪):</label>
   <input type="number" id="budgetInput" placeholder="לדוגמה: 1500">
   <button onclick="setBudget()">קבע תקציב</button>
-
+<h3 id="spentSummary" style="margin-top:10px;"></h3>
   <h3 id="dailyLimit"></h3>
   <h3 id="remainingBudget"></h3>
 
@@ -266,7 +266,17 @@ function updateDisplay() {
   document.getElementById("remainingBudget").textContent =
     `תקציב חודשי כולל: ${data.totalBudget.toFixed(2)} ₪ (${data.dailyBase.toFixed(2)} ₪ ליום)`;
 }
+// פונקציה שמחשבת כמה הוצאתי מהתקציב הכולל
+function updateSpentSummary() {
+  if (!data) return;
 
+  const purchases = JSON.parse(localStorage.getItem("purchases") || "[]");
+  const totalSpent = purchases.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+  const remaining = data.totalBudget - totalSpent;
+
+  document.getElementById("spentSummary").textContent =
+    `סה״כ הוצאות עד כה: ${totalSpent.toFixed(2)} ₪ | נשאר: ${remaining.toFixed(2)} ₪`;
+}
 // ---------------- קניות ----------------
 function togglePurchaseFields(show) {
   document.getElementById("purchaseFields").style.display = show ? "block" : "none";
@@ -307,8 +317,9 @@ function savePurchase() {
   document.getElementById("storeName").value = "";
 
   renderPurchases();
-  updateDisplay();
-  togglePurchaseFields(false);
+updateDisplay();
+updateSpentSummary(); // ← הוספה חדשה
+togglePurchaseFields(false);
 }
 
 // ---------------- רשימת קניות ----------------
@@ -361,6 +372,7 @@ function applySuggestion(type, value) {
 renderPurchases();
 ["stores","products","amounts"].forEach(renderSuggestions);
 updateDisplay();
+  updateSpentSummary();
 </script>
 
 </body>
