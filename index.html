@@ -192,14 +192,15 @@ hr {
 
 <div class="card">
   <h2>מחשב תקציב יומי 💰</h2>
-
+<div style=" padding: 20px 20px; box-shadow: inset 0 0 7px 4px #ccd; background-color: #ccc; border:  solid 1px #00698c; border-radius: 12px; margin: 30px auto 5px;">
+<h3 id="spentSummary" style="margin-top:10px;"></h3>
+  <h3 id="dailyLimit" style="font-weight: bolder; font-size: 23px; color:#00698c;"></h3>
+  <h3 id="remainingBudget"></h3>
+</div>
   <label>הכנס תקציב חודשי (₪):</label>
   <input type="number" id="budgetInput" placeholder="לדוגמה: 1500">
   <button onclick="setBudget()">קבע תקציב</button>
-<h3 id="spentSummary" style="margin-top:10px;"></h3>
-  <h3 id="dailyLimit"></h3>
-  <h3 id="remainingBudget"></h3>
-
+  
   <hr>
 
   <button onclick="togglePurchaseFields(true)">🛒 קנייה חדשה</button>
