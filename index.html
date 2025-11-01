@@ -138,11 +138,53 @@ hr {
 }
 
 /* רשימת קניות */
-.purchase-item {
-  border-bottom: 1px solid #e0e0e0;
-  padding: 8px 0;
-  font-size: 0.95em;
+/* רשימת הקניות – עיצוב מודגש ואלגנטי */
+#purchaseList {
+  margin-top: 15px;
   text-align: right;
+}
+
+.purchase-item {
+  background: linear-gradient(135deg, #f9fdfd, #e0f7fa);
+  border: 1px solid #b2dfdb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  box-shadow: 0 4px 10px rgba(0, 150, 136, 0.15);
+  transition: all 0.3s ease;
+  text-align: right;
+  position: relative;
+}
+
+/* אפקט בעת מעבר עכבר */
+.purchase-item:hover {
+  background: linear-gradient(135deg, #e0f7fa, #b2dfdb);
+  transform: scale(1.02);
+  box-shadow: 0 6px 15px rgba(0, 150, 136, 0.25);
+}
+
+/* שם מוצר ובית עסק */
+.purchase-item strong {
+  color: #00695c;
+  font-size: 1.05em;
+}
+
+/* פרטי רכישה קטנים */
+.purchase-item small {
+  color: #37474f;
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9em;
+}
+
+/* סמל קטן בפינה */
+.purchase-item::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.2em;
+  opacity: 0.7;
 }
 </style>
 </head>
