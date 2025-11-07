@@ -3,378 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מחשב תקציב יומי</title>
+<title>ניהול כספים אישי</title>
 <style>
 body {
-  font-family: "Heebo", "Segoe UI", Tahoma, sans-serif;
-  background: linear-gradient(135deg, #c2f0e0, #e0f7fa, #f9fbe7);
-  margin: 0;
-  padding: 0;
-  direction: rtl;
-  text-align: right;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-family: "Heebo", "Segoe UI", sans-serif;
+  background: linear-gradient(135deg,#c2f0e0,#e0f7fa,#f9fbe7);
+  margin:0; padding:0;
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh; direction:rtl;
 }
-
 .card {
-  background: #ffffffcc;
-  backdrop-filter: blur(8px);
-  max-width: 440px;
-  width: 90%;
-  margin: auto;
-  padding: 32px;
-  border-radius: 22px;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
-  transition: all 0.35s ease;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  text-align: center; /* כל האלמנטים מיושרים למרכז */
+  background:#ffffffcc;
+  backdrop-filter:blur(8px);
+  border-radius:20px;
+  padding:28px;
+  width:90%; max-width:460px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.15);
 }
-
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-}
-
-h2 {
-  color: #00695c;
-  font-size: 1.8em;
-  text-align: center;
-  margin-bottom: 25px;
-  background: linear-gradient(to right, #00796b, #26a69a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-label {
-  display: block;
-  font-weight: 600;
-  margin: 12px 0 6px;
-  color: #2e2e2e;
-  text-align: right;
-}
-
-input[type="number"], input[type="text"] {
-  width: 90%;
-  padding: 12px 14px;
-  margin: 0 auto 10px;
-  border: 1px solid #b2dfdb;
-  border-radius: 10px;
-  background: #fcfcfc;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  display: block;
-}
-
-input:focus {
-  outline: none;
-  border-color: #26a69a;
-  box-shadow: 0 0 8px rgba(38, 166, 154, 0.3);
-  background: #f0fffc;
-}
-
+h2 {text-align:center;color:#00695c;}
 button {
-  width: 90%;
-  margin: 10px auto;
-  background: linear-gradient(to right, #009688, #26a69a);
-  color: #fff;
-  border: none;
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: bold;
-  font-size: 1.05em;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: block;
+  background:linear-gradient(to right,#009688,#26a69a);
+  color:#fff;border:none;padding:12px;border-radius:10px;
+  width:100%;cursor:pointer;font-weight:bold;margin-top:10px;
 }
-
-button:hover {
-  background: linear-gradient(to right, #00796b, #009688);
-  box-shadow: 0 6px 15px rgba(0, 150, 136, 0.3);
-  transform: translateY(-2px);
+button:hover {background:linear-gradient(to right,#00796b,#009688);}
+input[type=text],input[type=number] {
+  width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #b2dfdb;
 }
-
-h3 {
-  margin-top: 25px;
-  color: #37474f;
-  font-weight: 500;
-  font-size: 1.1em;
-  text-align: center;
-}
-
-hr {
-  margin: 25px auto;
-  border: none;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #ccc, transparent);
-  width: 90%;
-}
-
-.suggestion {
-  background: #e0f2f1;
-  color: #004d40;
-  border-radius: 10px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: 0.2s;
-  white-space: nowrap;
-}
-
-.suggestion:hover {
-  background: #b2dfdb;
-}
-
-/* כל ההצעות מסודרות בשורה ועוברות לשורה הבאה כשצריך */
-#storeSuggestions, 
-#productSuggestions, 
-#amountSuggestions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-/* רשימת קניות */
-/* רשימת הקניות – עיצוב מודגש ואלגנטי */
-#purchaseList {
-  margin-top: 15px;
-  text-align: right;
-}
-
+#purchaseList, #summaryByProduct {margin-top:20px;}
 .purchase-item {
-  background: linear-gradient(135deg, #f9fdfd, #e0f7fa);
-  border: 1px solid #b2dfdb;
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin: 10px 0;
-  box-shadow: 0 4px 10px rgba(0, 150, 136, 0.15);
-  transition: all 0.3s ease;
-  text-align: right;
-  position: relative;
-}
-
-/* אפקט בעת מעבר עכבר */
-.purchase-item:hover {
-  background: linear-gradient(135deg, #e0f7fa, #b2dfdb);
-  transform: scale(1.02);
-  box-shadow: 0 6px 15px rgba(0, 150, 136, 0.25);
-}
-
-/* שם מוצר ובית עסק */
-.purchase-item strong {
-  color: #00695c;
-  font-size: 1.05em;
-}
-
-/* פרטי רכישה קטנים */
-.purchase-item small {
-  color: #37474f;
-  display: block;
-  margin-top: 4px;
-  font-size: 0.9em;
-}
-
-/* סמל קטן בפינה */
-.purchase-item::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 1.2em;
-  opacity: 0.7;
+  background:#e0f7fa;border-radius:10px;padding:8px 10px;margin:6px 0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 </style>
 </head>
 <body>
-
 <div class="card">
-  <h2>מחשב תקציב יומי 💰</h2>
+  <h2>ניהול כספים 💰</h2>
 
-  <label>הכנס תקציב חודשי (₪):</label>
-  <input type="number" id="budgetInput" placeholder="לדוגמה: 1500">
-  <button onclick="setBudget()">קבע תקציב</button>
-  
-  <hr>
-
-  <button onclick="togglePurchaseFields(true)">🛒 קנייה חדשה</button>
-
-  <div id="purchaseFields" style="display:none; margin-top:15px;">
-    <label>שם מוצר 📦:</label>
-    <input type="text" id="productName" placeholder="לדוגמה: לחם שיפון">
-    <div id="productSuggestions"></div>
-
-    <label>בית עסק 🏪:</label>
-    <input type="text" id="storeName" placeholder="לדוגמה: שופרסל">
-    <div id="storeSuggestions"></div>
-
-    <label>סכום קנייה 💰 (₪):</label>
-    <input type="number" id="spendInput" placeholder="לדוגמה: 25">
-    <div id="amountSuggestions"></div>
-
-    <button onclick="savePurchase()">אישור</button>
+  <div id="budgetSection">
+    <label>הכנס תקציב חודשי (₪):</label>
+    <input type="number" id="budgetInput" placeholder="לדוגמה 2000">
+    <button onclick="setBudget()">אישור</button>
   </div>
 
-  <hr>
-<div style=" padding: 10px 10px; box-shadow: inset 0 0 7px 4px #aaa5; background-color: #ccc4; border:  solid 1px #00698c; border-radius: 12px; margin: 30px auto 5px;">
-<h3 id="spentSummary" style="margin-top:10px;"></h3>
-  <h3 id="dailyLimit" style="font-weight: bolder; font-size: 23px; color:#00698c;"></h3>
-  <h3 id="remainingBudget"></h3>
-</div>
-  <div id="purchaseList" style="margin-top:15px;"></div>
+  <div id="mainSection" style="display:none">
+    <h3 id="remaining"></h3>
+    <h4 id="dailyAverage"></h4>
+
+    <button onclick="toggleForm()">🛒 קנייה חדשה</button>
+
+    <div id="purchaseForm" style="display:none;margin-top:10px;">
+      <input type="text" id="product" placeholder="שם מוצר">
+      <input type="text" id="store" placeholder="בית עסק">
+      <input type="number" id="price" placeholder="סכום (₪)">
+      <button onclick="addPurchase()">הוסף</button>
+    </div>
+
+    <div id="purchaseList"></div>
+    <hr>
+    <h4>סה״כ לפי מוצר:</h4>
+    <div id="summaryByProduct"></div>
+    <button style="background:#ef4444;margin-top:20px" onclick="resetAll()">איפוס הכל</button>
+  </div>
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("budgetData")) || null;
-const today = new Date();
-const currentMonth = today.getMonth();
-const currentDay = today.getDate();
+let data = JSON.parse(localStorage.getItem("financeData")) || null;
 
-// ---------------- תקציב ----------------
-function setBudget() {
-  const budget = parseFloat(document.getElementById("budgetInput").value);
-  if (!budget || budget <= 0) return alert("הכנס תקציב תקין!");
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+function setBudget(){
+  const b = parseFloat(document.getElementById("budgetInput").value);
+  if(!b || b<=0) return alert("הכנס סכום תקין");
+  const d = new Date();
   data = {
-    month: currentMonth,
-    daysInMonth,
-    totalBudget: budget,
-    dailyBase: budget / daysInMonth,
-    lastDay: currentDay,
-    balanceToday: budget / daysInMonth
+    start: d.toISOString(),
+    month: d.getMonth(),
+    total: b,
+    purchases: []
   };
-  localStorage.setItem("budgetData", JSON.stringify(data));
-  updateDisplay();
+  localStorage.setItem("financeData", JSON.stringify(data));
+  document.getElementById("budgetSection").style.display="none";
+  document.getElementById("mainSection").style.display="block";
+  updateUI();
 }
 
-function updateDisplay() {
-  if (!data) return;
-  if (data.month !== currentMonth) {
-    localStorage.removeItem("budgetData");
-    document.getElementById("dailyLimit").textContent = "התחיל חודש חדש! קבע תקציב חדש.";
-    return;
+function toggleForm(){
+  const f=document.getElementById("purchaseForm");
+  f.style.display = f.style.display==="none"?"block":"none";
+}
+
+function addPurchase(){
+  const product=document.getElementById("product").value.trim();
+  const store=document.getElementById("store").value.trim();
+  const price=parseFloat(document.getElementById("price").value);
+  if(!product||!store||!price||price<=0) return alert("מלא את כל השדות");
+
+  data.purchases.push({
+    product,store,price,
+    date:new Date().toLocaleDateString("he-IL"),
+    time:new Date().toLocaleTimeString("he-IL")
+  });
+  localStorage.setItem("financeData", JSON.stringify(data));
+  document.getElementById("product").value="";
+  document.getElementById("store").value="";
+  document.getElementById("price").value="";
+  toggleForm();
+  updateUI();
+}
+
+function updateUI(){
+  if(!data) return;
+  document.getElementById("budgetSection").style.display="none";
+  document.getElementById("mainSection").style.display="block";
+
+  const spent=data.purchases.reduce((a,p)=>a+p.price,0);
+  const remaining=data.total-spent;
+  document.getElementById("remaining").textContent=`נשאר לך: ${remaining.toFixed(2)} ₪ מתוך ${data.total.toFixed(2)} ₪`;
+
+  // ממוצע יומי
+  const start=new Date(data.start);
+  const now=new Date();
+  const diffDays=Math.max(1,Math.ceil((now-start)/86400000));
+  const avg=spent/diffDays;
+  document.getElementById("dailyAverage").textContent=`ממוצע יומי: ${avg.toFixed(2)} ₪ ליום (${diffDays} ימים)`;
+
+  // רשימת קניות
+  const list=document.getElementById("purchaseList");
+  if(data.purchases.length===0){
+    list.innerHTML="<p style='color:#666'>אין עדיין רכישות</p>";
+  } else {
+    list.innerHTML=data.purchases.slice().reverse().map(p=>
+      `<div class='purchase-item'>📦 ${p.product} — 🏪 ${p.store} — 💰 ${p.price} ₪ <br><small>${p.date} ${p.time}</small></div>`
+    ).join("");
   }
-  const daysPassed = currentDay - data.lastDay;
-  if (daysPassed > 0) {
-    data.balanceToday += data.dailyBase * daysPassed;
-    data.lastDay = currentDay;
-    localStorage.setItem("budgetData", JSON.stringify(data));
+
+  // סיכום לפי מוצר
+  const summary={};
+  data.purchases.forEach(p=>{
+    summary[p.product]=(summary[p.product]||0)+p.price;
+  });
+  const summaryDiv=document.getElementById("summaryByProduct");
+  summaryDiv.innerHTML=Object.keys(summary).length
+    ? Object.entries(summary).map(([prod,sum])=>`<div>• ${prod}: ${sum.toFixed(2)} ₪</div>`).join("")
+    : "<p style='color:#666'>אין נתונים עדיין</p>";
+}
+
+function resetAll(){
+  if(confirm("לאפס הכל?")) {
+    localStorage.removeItem("financeData");
+    data=null;
+    document.getElementById("budgetSection").style.display="block";
+    document.getElementById("mainSection").style.display="none";
   }
-  document.getElementById("dailyLimit").textContent =
-    `יתרה יומית זמינה להיום: ${data.balanceToday.toFixed(2)} ₪`;
-  document.getElementById("remainingBudget").textContent =
-    `תקציב חודשי כולל: ${data.totalBudget.toFixed(2)} ₪ (${data.dailyBase.toFixed(2)} ₪ ליום)`;
-}
-// פונקציה שמחשבת כמה הוצאתי מהתקציב הכולל
-function updateSpentSummary() {
-  if (!data) return;
-
-  const purchases = JSON.parse(localStorage.getItem("purchases") || "[]");
-  const totalSpent = purchases.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-  const remaining = data.totalBudget - totalSpent;
-
-  document.getElementById("spentSummary").textContent =
-    `סה״כ הוצאות עד כה: ${totalSpent.toFixed(2)} ₪ | נשאר: ${remaining.toFixed(2)} ₪`;
-}
-// ---------------- קניות ----------------
-function togglePurchaseFields(show) {
-  document.getElementById("purchaseFields").style.display = show ? "block" : "none";
-}
-
-function savePurchase() {
-  if (!data) return alert("קבע תקציב קודם!");
-  const amount = parseFloat(document.getElementById("spendInput").value);
-  const product = document.getElementById("productName").value.trim();
-  const store = document.getElementById("storeName").value.trim();
-  if (!amount || amount <= 0) return alert("הכנס סכום תקין!");
-  if (!product) return alert("הכנס שם מוצר!");
-  if (!store) return alert("הכנס שם בית עסק!");
-
-  const now = new Date();
-  const purchase = {
-    amount, product, store,
-    date: now.toLocaleDateString("he-IL"),
-    time: now.toLocaleTimeString("he-IL")
-  };
-
-  const purchases = JSON.parse(localStorage.getItem("purchases") || "[]");
-  purchases.unshift(purchase);
-  localStorage.setItem("purchases", JSON.stringify(purchases));
-
-  // שמירת הצעות
-  saveSuggestion("stores", store);
-  saveSuggestion("products", product);
-  saveSuggestion("amounts", amount.toString());
-
-  // עדכון תקציב
-  data.balanceToday -= amount;
-  localStorage.setItem("budgetData", JSON.stringify(data));
-
-  // ניקוי שדות
-  document.getElementById("spendInput").value = "";
-  document.getElementById("productName").value = "";
-  document.getElementById("storeName").value = "";
-
-  renderPurchases();
-updateDisplay();
-updateSpentSummary(); // ← הוספה חדשה
-togglePurchaseFields(false);
-}
-
-// ---------------- רשימת קניות ----------------
-function renderPurchases() {
-  const list = document.getElementById("purchaseList");
-  const purchases = JSON.parse(localStorage.getItem("purchases") || "[]");
-  if (!purchases.length) {
-    list.innerHTML = "<p style='text-align:center;color:#777;'>אין עדיין קניות</p>";
-    return;
-  }
-  list.innerHTML = purchases.map(p =>
-    `<div class="purchase-item">
-      📦 <strong>${p.product}</strong> — 🏪 ${p.store}<br>
-      💰 ${p.amount} ₪ | 🕒 ${p.time} | 📅 ${p.date}
-    </div>`
-  ).join("");
-}
-
-// ---------------- הצעות לבחירה ----------------
-function saveSuggestion(type, value) {
-  let list = JSON.parse(localStorage.getItem(type) || "[]");
-  if (!list.includes(value)) {
-    list.unshift(value);
-    if (list.length > 5) list = list.slice(0, 5);
-    localStorage.setItem(type, JSON.stringify(list));
-  }
-  renderSuggestions(type);
-}
-
-function renderSuggestions(type) {
-  const container = document.getElementById(
-    type === "stores" ? "storeSuggestions" :
-    type === "products" ? "productSuggestions" : "amountSuggestions"
-  );
-  const emoji = type === "stores" ? "🏪" : type === "products" ? "📦" : "💰";
-  const list = JSON.parse(localStorage.getItem(type) || "[]");
-  if (!list.length) { container.innerHTML = ""; return; }
-  container.innerHTML = list.map(v => 
-    `<span class="suggestion" onclick="applySuggestion('${type}','${v}')">${emoji} ${v}</span>`
-  ).join("");
-}
-
-function applySuggestion(type, value) {
-  if (type === "stores") document.getElementById("storeName").value = value;
-  if (type === "products") document.getElementById("productName").value = value;
-  if (type === "amounts") document.getElementById("spendInput").value = value;
 }
 
 // בעת טעינה
-renderPurchases();
-["stores","products","amounts"].forEach(renderSuggestions);
-updateDisplay();
-  updateSpentSummary();
+if(data){
+  updateUI();
+}
 </script>
-
 </body>
 </html>
