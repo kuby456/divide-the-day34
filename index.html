@@ -30,6 +30,16 @@ button:hover {background:linear-gradient(to right,#00796b,#009688);}
 input[type=text],input[type=number] {
   width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #b2dfdb;
 }
+.suggestion {
+  display:inline-block;
+  background:#e0f2f1;
+  padding:6px 10px;
+  margin:4px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+.suggestion:hover {background:#b2dfdb;}
 #purchaseList, #summaryByProduct {margin-top:20px;}
 .purchase-item {
   background:#e0f7fa;border-radius:10px;padding:8px 10px;margin:6px 0;
@@ -54,7 +64,8 @@ input[type=text],input[type=number] {
     <button onclick="toggleForm()">🛒 קנייה חדשה</button>
 
     <div id="purchaseForm" style="display:none;margin-top:10px;">
-      <input type="text" id="product" placeholder="שם מוצר">
+      <input type="text" id="product" placeholder="שם מוצר" oninput="showSuggestions(this.value)">
+      <div id="productSuggestions"></div>
       <input type="text" id="store" placeholder="בית עסק">
       <input type="number" id="price" placeholder="סכום (₪)">
       <button onclick="addPurchase()">הוסף</button>
@@ -70,6 +81,7 @@ input[type=text],input[type=number] {
 
 <script>
 let data = JSON.parse(localStorage.getItem("financeData")) || null;
+let productHistory = JSON.parse(localStorage.getItem("productHistory")) || [];
 
 function setBudget(){
   const b = parseFloat(document.getElementById("budgetInput").value);
@@ -98,6 +110,13 @@ function addPurchase(){
   const price=parseFloat(document.getElementById("price").value);
   if(!product||!store||!price||price<=0) return alert("מלא את כל השדות");
 
+  // שמירת המוצר להיסטוריה
+  if(!productHistory.includes(product)){
+    productHistory.unshift(product);
+    if(productHistory.length>15) productHistory.pop();
+    localStorage.setItem("productHistory", JSON.stringify(productHistory));
+  }
+
   data.purchases.push({
     product,store,price,
     date:new Date().toLocaleDateString("he-IL"),
@@ -107,8 +126,25 @@ function addPurchase(){
   document.getElementById("product").value="";
   document.getElementById("store").value="";
   document.getElementById("price").value="";
+  document.getElementById("productSuggestions").innerHTML="";
   toggleForm();
   updateUI();
+}
+
+function showSuggestions(value){
+  const container=document.getElementById("productSuggestions");
+  if(!value){
+    container.innerHTML="";
+    return;
+  }
+  const matches=productHistory.filter(p=>p.includes(value));
+  if(matches.length===0){container.innerHTML="";return;}
+  container.innerHTML=matches.map(m=>`<span class='suggestion' onclick='selectProduct("${m}")'>${m}</span>`).join("");
+}
+
+function selectProduct(name){
+  document.getElementById("product").value=name;
+  document.getElementById("productSuggestions").innerHTML="";
 }
 
 function updateUI(){
@@ -125,7 +161,7 @@ function updateUI(){
   const now=new Date();
   const diffDays=Math.max(1,Math.ceil((now-start)/86400000));
   const avg=spent/diffDays;
-  document.getElementById("dailyAverage").textContent=`ממוצע יומי: ${avg.toFixed(2)} ₪ ליום (${diffDays} ימים)`;
+  document.getElementById("dailyAverage").textContent=`ממוצע יומי: ${avg.toFixed(2)} ₪ (${diffDays} ימים)`;
 
   // רשימת קניות
   const list=document.getElementById("purchaseList");
@@ -151,16 +187,15 @@ function updateUI(){
 function resetAll(){
   if(confirm("לאפס הכל?")) {
     localStorage.removeItem("financeData");
+    localStorage.removeItem("productHistory");
     data=null;
+    productHistory=[];
     document.getElementById("budgetSection").style.display="block";
     document.getElementById("mainSection").style.display="none";
   }
 }
 
-// בעת טעינה
-if(data){
-  updateUI();
-}
+if(data) updateUI();
 </script>
 </body>
 </html>
