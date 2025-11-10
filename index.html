@@ -156,8 +156,9 @@ hr {
   </div>
 
   <div id="mainSection" style="display:none">
+     <p id="budgetDate" style="text-align:center;color:#004d40;font-size:0.95em;margin:6px 0;"></p>
     <h3 id="remaining"></h3>
-    <h4 id="dailyAverage"></h4>
+     <h4 id="dailyAverage"></h4>
 
     <button onclick="toggleForm()">🛒 קנייה חדשה</button>
 
@@ -323,6 +324,8 @@ function updateUI(){
   const spent=data.purchases.reduce((a,p)=>a+p.price,0);
   const remaining=data.total-spent;
   document.getElementById("remaining").textContent=`נשאר לך: ${remaining.toFixed(2)} ₪ מתוך ${data.total.toFixed(2)} ₪`;
+  const startDate = new Date(data.start).toLocaleDateString("he-IL");
+document.getElementById("budgetDate").textContent = `תאריך הזנת התקציב: ${startDate}`;
 
   const start=new Date(data.start);
   const now=new Date();
